@@ -1,0 +1,31 @@
+# Dépendances et compilation
+node_modules/
+src-tauri/target/
+src-tauri/gen/
+src/fonts/
+
+# BASS (licence un4seen : à télécharger soi-même, voir README)
+*.zip
+src-tauri/lib/*.dll
+
+# Android
+android/build/
+android/app/build/
+android/.gradle/
+android/.idea/
+android/.kotlin/
+android/local.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+
+# Fichiers personnels
+journal/
+test/
+outils/
+
+# Système
+.DS_Store
+Thumbs.db
+*.log

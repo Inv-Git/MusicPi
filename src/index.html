@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MusicPi</title>
+  <script src="i18n.js"></script>
+  <script>
+    try {
+      var m = localStorage.getItem("mode");
+      var dark = m === "dark" || (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+      if (dark) document.documentElement.dataset.mode = "dark";
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="fonts/manrope.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-tauri-drag-region>
+  <div id="splash" class="splash" aria-hidden="true">
+    <svg class="sp-logo" viewBox="-20 -20 580.54 670.19" role="img" aria-label="MusicPi">
+      <path class="sp-sym" pathLength="1" d="M401.74,201.26c0,17.24-14.03,31.27-31.27,31.27s-31.27-14.03-31.27-31.27V50h47.06V0l-182.53.26v182.26c-9.63-4.03-20.19-6.26-31.27-6.26-44.81,0-81.27,36.46-81.27,81.27s36.46,81.27,81.27,81.27,81.27-36.46,81.27-81.27c0-1.7-.07-3.38-.17-5.05h.17V50h35.47v151.26c0,44.81,36.46,81.27,81.27,81.27s81.27-36.46,81.27-81.27h-50ZM172.46,288.8c-17.24,0-31.27-14.03-31.27-31.27s14.03-31.27,31.27-31.27,31.27,14.03,31.27,31.27-14.03,31.27-31.27,31.27Z"/>
+      <g class="sp-word"><path class="sp-l" style="--i:0" d="M111.3,427.08v98.28h-23.94v-58.94l-21.98,58.94h-19.32l-22.12-59.08v59.08H0v-98.28h28.28l27.58,68.04,27.3-68.04h28.14Z"/><path class="sp-l" style="--i:1" d="M205.66,447.24v78.12h-23.94v-10.64c-2.43,3.45-5.72,6.23-9.87,8.33-4.15,2.1-8.75,3.15-13.79,3.15-5.97,0-11.25-1.33-15.82-3.99-4.57-2.66-8.12-6.51-10.64-11.55s-3.78-10.97-3.78-17.78v-45.64h23.8v42.42c0,5.23,1.35,9.29,4.06,12.18,2.71,2.89,6.35,4.34,10.92,4.34s8.35-1.45,11.06-4.34c2.71-2.89,4.06-6.95,4.06-12.18v-42.42h23.94Z"/><path class="sp-l" style="--i:2" d="M236.46,522.98c-5.32-2.33-9.52-5.53-12.6-9.59-3.08-4.06-4.81-8.61-5.18-13.65h23.66c.28,2.71,1.54,4.9,3.78,6.58s4.99,2.52,8.26,2.52c2.99,0,5.3-.58,6.93-1.75,1.63-1.17,2.45-2.68,2.45-4.55,0-2.24-1.17-3.9-3.5-4.97-2.33-1.07-6.11-2.26-11.34-3.57-5.6-1.31-10.27-2.68-14-4.13-3.73-1.45-6.95-3.73-9.66-6.86-2.71-3.13-4.06-7.35-4.06-12.67,0-4.48,1.24-8.56,3.71-12.25,2.47-3.69,6.11-6.6,10.92-8.75,4.81-2.15,10.52-3.22,17.15-3.22,9.8,0,17.52,2.43,23.17,7.28,5.65,4.85,8.89,11.29,9.73,19.32h-22.12c-.37-2.71-1.56-4.85-3.57-6.44-2.01-1.59-4.64-2.38-7.91-2.38-2.8,0-4.95.54-6.44,1.61-1.49,1.07-2.24,2.54-2.24,4.41,0,2.24,1.19,3.92,3.57,5.04s6.09,2.24,11.13,3.36c5.79,1.49,10.5,2.96,14.14,4.41,3.64,1.45,6.84,3.78,9.59,7,2.75,3.22,4.18,7.54,4.27,12.95,0,4.57-1.28,8.66-3.85,12.25-2.57,3.59-6.25,6.42-11.06,8.47-4.81,2.05-10.38,3.08-16.73,3.08-6.81,0-12.88-1.17-18.2-3.5Z"/><path class="sp-l" style="--i:3" d="M302.75,435.41c-2.66-2.47-3.99-5.53-3.99-9.17s1.33-6.84,3.99-9.31c2.66-2.47,6.09-3.71,10.29-3.71s7.49,1.24,10.15,3.71c2.66,2.47,3.99,5.58,3.99,9.31s-1.33,6.7-3.99,9.17c-2.66,2.47-6.04,3.71-10.15,3.71s-7.63-1.24-10.29-3.71ZM324.94,447.24v78.12h-23.94v-78.12h23.94Z"/><path class="sp-l" style="--i:4" d="M342.51,465.02c3.31-6.07,7.93-10.73,13.86-14,5.93-3.27,12.72-4.9,20.37-4.9,9.8,0,17.99,2.57,24.57,7.7,6.58,5.13,10.9,12.37,12.95,21.7h-25.48c-2.15-5.97-6.3-8.96-12.46-8.96-4.39,0-7.89,1.7-10.5,5.11-2.61,3.41-3.92,8.28-3.92,14.63s1.31,11.22,3.92,14.63c2.61,3.41,6.11,5.11,10.5,5.11,6.16,0,10.31-2.99,12.46-8.96h25.48c-2.05,9.15-6.39,16.33-13.02,21.56-6.63,5.23-14.79,7.84-24.5,7.84-7.65,0-14.44-1.63-20.37-4.9-5.93-3.27-10.55-7.93-13.86-14-3.31-6.07-4.97-13.16-4.97-21.28s1.66-15.21,4.97-21.28Z"/><path class="sp-l" style="--i:5" d="M497.98,474.33c-2.61,4.71-6.63,8.52-12.04,11.41-5.41,2.89-12.13,4.34-20.16,4.34h-14.84v35.28h-23.94v-98.28h38.78c7.84,0,14.47,1.35,19.88,4.06,5.41,2.71,9.47,6.44,12.18,11.2,2.71,4.76,4.06,10.22,4.06,16.38,0,5.69-1.31,10.9-3.92,15.61ZM474.18,467.82c2.24-2.15,3.36-5.18,3.36-9.1s-1.12-6.95-3.36-9.1c-2.24-2.15-5.65-3.22-10.22-3.22h-13.02v24.64h13.02c4.57,0,7.98-1.07,10.22-3.22Z"/><path class="sp-l" style="--i:6" d="M516.11,435.41c-2.66-2.47-3.99-5.53-3.99-9.17s1.33-6.84,3.99-9.31c2.66-2.47,6.09-3.71,10.29-3.71s7.49,1.24,10.15,3.71c2.66,2.47,3.99,5.58,3.99,9.31s-1.33,6.7-3.99,9.17c-2.66,2.47-6.04,3.71-10.15,3.71s-7.63-1.24-10.29-3.71ZM538.3,447.24v78.12h-23.94v-78.12h23.94Z"/></g>
+      <g class="sp-tag"><path d="M101.79,601.14h-21.28l-3.92,10.85h-6.72l17.64-48.51h7.35l17.57,48.51h-6.72l-3.92-10.85ZM99.97,595.96l-8.82-24.64-8.82,24.64h17.64Z"/><path d="M154.15,573.63v38.36h-6.37v-5.67c-1.21,1.96-2.91,3.49-5.08,4.58-2.17,1.1-4.56,1.65-7.17,1.65-2.99,0-5.67-.62-8.05-1.85-2.38-1.24-4.26-3.09-5.63-5.56-1.38-2.47-2.07-5.48-2.07-9.03v-22.47h6.3v21.63c0,3.78.96,6.69,2.87,8.71,1.91,2.03,4.53,3.04,7.84,3.04s6.09-1.05,8.05-3.15,2.94-5.16,2.94-9.17v-21.07h6.37Z"/><path d="M164.93,582.34c1.59-2.96,3.77-5.26,6.54-6.9,2.78-1.63,5.89-2.45,9.34-2.45,2.99,0,5.76.69,8.33,2.07,2.57,1.38,4.53,3.18,5.88,5.42v-20.3h6.44v51.8h-6.44v-7.21c-1.26,2.29-3.13,4.17-5.6,5.63-2.47,1.47-5.37,2.21-8.68,2.21s-6.5-.84-9.27-2.52c-2.78-1.68-4.96-4.04-6.54-7.07-1.59-3.03-2.38-6.49-2.38-10.36s.79-7.36,2.38-10.33ZM193.28,585.18c-1.17-2.15-2.74-3.79-4.72-4.94-1.98-1.14-4.17-1.71-6.54-1.71s-4.55.56-6.51,1.68c-1.96,1.12-3.52,2.75-4.69,4.9-1.17,2.15-1.75,4.67-1.75,7.56s.58,5.49,1.75,7.67c1.17,2.17,2.73,3.83,4.69,4.97,1.96,1.14,4.13,1.71,6.51,1.71s4.56-.57,6.54-1.71c1.98-1.14,3.56-2.8,4.72-4.97,1.17-2.17,1.75-4.7,1.75-7.6s-.58-5.41-1.75-7.56Z"/><path d="M212.46,566.14c-.84-.84-1.26-1.87-1.26-3.08s.42-2.24,1.26-3.08c.84-.84,1.87-1.26,3.08-1.26s2.16.42,2.97,1.26c.82.84,1.23,1.87,1.23,3.08s-.41,2.24-1.23,3.08c-.82.84-1.81,1.26-2.97,1.26s-2.24-.42-3.08-1.26ZM218.62,573.63v38.36h-6.37v-38.36h6.37Z"/><path d="M236.43,610.17c-2.92-1.63-5.2-3.96-6.86-6.97-1.66-3.01-2.49-6.5-2.49-10.46s.85-7.38,2.56-10.4c1.7-3.01,4.02-5.32,6.96-6.93,2.94-1.61,6.23-2.42,9.87-2.42s6.93.81,9.87,2.42c2.94,1.61,5.26,3.91,6.96,6.9,1.7,2.99,2.55,6.46,2.55,10.43s-.88,7.46-2.62,10.46c-1.75,3.01-4.12,5.33-7.1,6.97-2.99,1.63-6.3,2.45-9.94,2.45s-6.85-.82-9.76-2.45ZM252.64,605.41c2.01-1.07,3.63-2.68,4.86-4.83,1.24-2.15,1.86-4.76,1.86-7.84s-.61-5.69-1.82-7.84c-1.21-2.15-2.8-3.75-4.76-4.79-1.96-1.05-4.08-1.58-6.37-1.58s-4.47.52-6.41,1.58c-1.94,1.05-3.49,2.65-4.65,4.79-1.17,2.15-1.75,4.76-1.75,7.84s.57,5.76,1.71,7.91c1.14,2.15,2.67,3.74,4.58,4.79,1.91,1.05,4.01,1.57,6.3,1.57s4.43-.54,6.44-1.61Z"/><path d="M304.96,575.2c2.5-1.47,5.4-2.21,8.71-2.21s6.5.82,9.28,2.45c2.78,1.63,4.96,3.93,6.54,6.9,1.59,2.96,2.38,6.4,2.38,10.33s-.79,7.33-2.38,10.36c-1.59,3.03-3.77,5.39-6.54,7.07-2.78,1.68-5.87,2.52-9.28,2.52s-6.15-.73-8.64-2.21c-2.5-1.47-4.4-3.3-5.71-5.49v25.27h-6.37v-56.56h6.37v7.07c1.26-2.19,3.14-4.02,5.63-5.5ZM323.62,585.11c-1.17-2.15-2.74-3.78-4.72-4.9-1.98-1.12-4.17-1.68-6.55-1.68s-4.49.57-6.47,1.71c-1.98,1.14-3.57,2.8-4.76,4.97-1.19,2.17-1.79,4.68-1.79,7.52s.59,5.42,1.79,7.6c1.19,2.17,2.78,3.83,4.76,4.97,1.98,1.14,4.14,1.71,6.47,1.71s4.56-.57,6.55-1.71c1.98-1.14,3.56-2.8,4.72-4.97,1.17-2.17,1.75-4.73,1.75-7.67s-.58-5.41-1.75-7.56Z"/><path d="M346.65,560.19v51.8h-6.37v-51.8h6.37Z"/><path d="M357.5,582.34c1.59-2.96,3.77-5.26,6.54-6.9,2.78-1.63,5.87-2.45,9.28-2.45s6.28.72,8.75,2.17c2.47,1.45,4.32,3.27,5.53,5.46v-7h6.44v38.36h-6.44v-7.14c-1.26,2.24-3.14,4.1-5.64,5.56-2.5,1.47-5.4,2.21-8.71,2.21s-6.49-.84-9.24-2.52c-2.75-1.68-4.92-4.04-6.51-7.07-1.59-3.03-2.38-6.49-2.38-10.36s.79-7.36,2.38-10.33ZM385.85,585.18c-1.17-2.15-2.74-3.79-4.73-4.94-1.98-1.14-4.17-1.71-6.54-1.71s-4.55.56-6.51,1.68c-1.96,1.12-3.52,2.75-4.69,4.9-1.17,2.15-1.75,4.67-1.75,7.56s.58,5.49,1.75,7.67c1.17,2.17,2.73,3.83,4.69,4.97,1.96,1.14,4.13,1.71,6.51,1.71s4.56-.57,6.54-1.71c1.98-1.14,3.56-2.8,4.73-4.97,1.17-2.17,1.75-4.7,1.75-7.6s-.58-5.41-1.75-7.56Z"/><path d="M437.86,573.63l-23.1,56.42h-6.58l7.56-18.48-15.47-37.94h7.07l12.04,31.08,11.9-31.08h6.58Z"/><path d="M479.01,595.19h-30.66c.23,3.78,1.53,6.73,3.88,8.85,2.36,2.12,5.21,3.19,8.58,3.19,2.75,0,5.05-.64,6.89-1.93,1.84-1.28,3.14-3,3.88-5.15h6.86c-1.03,3.69-3.08,6.69-6.16,9s-6.91,3.46-11.48,3.46c-3.64,0-6.9-.82-9.77-2.45-2.87-1.63-5.12-3.96-6.75-6.97-1.63-3.01-2.45-6.5-2.45-10.46s.79-7.44,2.38-10.43c1.59-2.99,3.81-5.28,6.68-6.9,2.87-1.61,6.17-2.42,9.91-2.42s6.86.79,9.66,2.38c2.8,1.59,4.96,3.77,6.47,6.54,1.52,2.78,2.28,5.92,2.28,9.42,0,1.21-.07,2.5-.21,3.85ZM471.03,583.74c-1.07-1.75-2.53-3.08-4.38-3.99-1.84-.91-3.88-1.37-6.12-1.37-3.22,0-5.96,1.03-8.22,3.08-2.26,2.05-3.56,4.9-3.89,8.54h24.22c0-2.43-.54-4.52-1.61-6.27Z"/><path d="M498.79,574.75c2.08-1.21,4.61-1.82,7.59-1.82v6.58h-1.68c-7.14,0-10.71,3.87-10.71,11.62v20.86h-6.37v-38.36h6.37v6.23c1.12-2.19,2.72-3.9,4.79-5.11Z"/></g>
+    </svg>
+  </div>
+
+  <!-- Icônes Lucide (lucide.dev, licence ISC) : déclarées une fois, appelées par leur nom -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 6h.01"/><circle cx="12" cy="14" r="4"/><path d="M12 14h.01"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-skip-back" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></symbol>
+    <symbol id="i-skip-forward" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></symbol>
+    <symbol id="i-sliders-vertical" viewBox="0 0 24 24"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></symbol>
+    <symbol id="i-volume-2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+    <symbol id="i-volume-1" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></symbol>
+    <symbol id="i-volume-x" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-square" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><path d="M10 8h.01"/><path d="M12 12h.01"/><path d="M14 8h.01"/><path d="M16 12h.01"/><path d="M18 8h.01"/><path d="M6 8h.01"/><path d="M7 16h10"/><path d="M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+    <symbol id="i-smartphone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-list-music" viewBox="0 0 24 24"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-7.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></symbol>
+    <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></symbol>
+    <symbol id="i-minimize" viewBox="0 0 24 24"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="m14 10 7-7"/><path d="m3 21 7-7"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></symbol>
+    <symbol id="i-trending" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  </svg>
+  <div class="app" data-tauri-drag-region>
+    <header class="topbar glass" data-tauri-drag-region>
+      <button id="back" class="icon-btn" aria-label="Retour" disabled><svg class="ic"><use href="#i-chevron-left"/></svg></button>
+      <nav class="tabs">
+        <button data-view="music">Musique</button>
+        <button data-view="albums">Albums</button>
+        <button data-view="folders">Dossiers</button>
+        <button data-view="playlists">Playlists</button>
+      </nav>
+      <label class="search">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <input id="search" type="search" placeholder="Rechercher">
+      </label>
+      <button id="out-btn" class="icon-btn" title="Sortie audio" aria-label="Sortie audio">
+        <svg class="ic"><use href="#i-speaker"/></svg>
+      </button>
+      <button class="icon-btn" data-view="settings" title="Paramètres" aria-label="Paramètres">
+        <svg class="ic"><use href="#i-settings"/></svg>
+      </button>
+      <div class="win-ctrl">
+        <button id="win-min" title="Réduire" aria-label="Réduire"><svg class="ic"><use href="#i-minus"/></svg></button>
+        <button id="win-max" title="Agrandir" aria-label="Agrandir"><svg class="ic"><use href="#i-square"/></svg></button>
+        <button id="win-close" class="close" title="Fermer" aria-label="Fermer"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+      <div id="out-panel" class="panel" hidden>
+        <label>Périphérique
+          <select id="device"></select>
+        </label>
+        <fieldset>
+          <legend>Mode</legend>
+          <label class="radio"><input type="radio" name="mode" value="shared"> Partagé <small>passe par le mixeur de Windows, volume de Windows actif</small></label>
+          <label class="radio"><input type="radio" name="mode" value="exclusive"> Exclusif <small>bit-perfect, ignore le volume de Windows : baisse l'ampli avant</small></label>
+        </fieldset>
+      </div>
+    </header>
+    <div id="view" class="view"></div>
+  </div>
+
+  <footer class="player glass">
+    <div class="now">
+      <img id="np-cover" class="np-cover" alt="" hidden>
+      <div class="np-text">
+        <div id="np-title" class="np-title">Aucune lecture</div>
+        <button id="np-artist" class="np-artist link"></button>
+      </div>
+      <button id="np-like" class="heart np-heart" aria-label="J'aime" title="J'aime" hidden><svg class="ic"><use href="#i-heart"/></svg></button>
+    </div>
+    <div class="center">
+      <div class="transport">
+        <button id="shuffle-btn" class="tbtn mode-btn" title="Aléatoire" aria-label="Aléatoire"><svg class="ic"><use href="#i-shuffle"/></svg></button>
+        <button id="prev" class="tbtn" aria-label="Précédent"><svg class="ic solid"><use href="#i-skip-back"/></svg></button>
+        <button id="play" class="tbtn main" aria-label="Lecture">
+          <svg id="ic-play" class="ic solid"><use href="#i-play"/></svg>
+          <svg id="ic-pause" class="ic solid"><use href="#i-pause"/></svg>
+        </button>
+        <button id="next" class="tbtn" aria-label="Suivant"><svg class="ic solid"><use href="#i-skip-forward"/></svg></button>
+        <button id="repeat-btn" class="tbtn mode-btn" title="Fin de la file : s'arrêter" aria-label="Répétition"><svg class="ic"><use href="#i-repeat"/></svg></button>
+      </div>
+      <div class="seek">
+        <span id="pos" class="time">0:00</span>
+        <div class="seek-wrap">
+          <span id="loop-band" class="loop-band" hidden></span>
+          <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Position">
+        </div>
+        <span id="dur" class="time">0:00</span>
+      </div>
+    </div>
+    <div class="right">
+      <div id="signal" class="signal" tabindex="0" hidden>
+        <span class="dot"></span><span id="signal-label"></span>
+        <div id="signal-tip" class="tip"></div>
+      </div>
+      <button id="ambient-btn" class="tbtn" title="Mode ambiance (plein écran)" aria-label="Mode ambiance">
+        <svg class="ic"><use href="#i-maximize"/></svg>
+      </button>
+      <button id="practice-btn" class="tbtn" title="Mode travail (ralentir, boucler)" aria-label="Mode travail">
+        <svg class="ic"><use href="#i-gauge"/></svg>
+      </button>
+      <button id="eq-btn" class="tbtn" title="Égaliseur" aria-label="Égaliseur">
+        <svg class="ic"><use href="#i-sliders-vertical"/></svg>
+      </button>
+      <svg id="vol-ic" class="ic vol-ic"><use href="#i-volume-2"/></svg>
+      <input id="volume" type="range" min="0" max="100" value="100" aria-label="Volume">
+    </div>
+    <div id="practice" class="practice" hidden>
+      <div class="pr-group">
+        <span class="pr-label">Vitesse</span>
+        <button class="pr-step" data-tempo-step="-5" aria-label="Plus lent">−</button>
+        <input id="tempo" type="range" min="50" max="150" step="1" value="100" aria-label="Vitesse">
+        <button class="pr-step" data-tempo-step="5" aria-label="Plus rapide">+</button>
+        <button id="tempo-val" class="pr-val" title="Revenir à 100 %">100 %</button>
+        <span id="tempo-note" class="hint" hidden>Ajoute bass_fx.dll pour ralentir sans changer la hauteur.</span>
+      </div>
+      <div class="pr-group">
+        <svg class="ic pr-ic"><use href="#i-repeat"/></svg>
+        <span class="pr-label">Boucle</span>
+        <button id="loop-a" class="pr-mark"><span>Début</span><b>—</b></button>
+        <button id="loop-b" class="pr-mark"><span>Fin</span><b>—</b></button>
+        <button id="loop-clear" class="pr-step" title="Effacer la boucle" aria-label="Effacer la boucle"><svg class="ic"><use href="#i-x"/></svg></button>
+        <span id="loop-keys" class="hint"></span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="eq-panel" class="eq-panel" hidden>
+    <div class="eq-head">
+      <b>Égaliseur</b>
+      <label class="switch" title="Activer l'égaliseur"><input type="checkbox" id="eq-on"><span></span></label>
+      <select id="eq-preset" aria-label="Préréglage"></select>
+      <button id="eq-reset" class="btn small">Remettre à plat</button>
+    </div>
+    <div id="eq-bands" class="eq-bands"></div>
+    <div class="eq-tools">
+      <button id="eq-save" class="btn small">Enregistrer…</button>
+      <button id="eq-del" class="btn small" hidden>Supprimer ce préréglage</button>
+      <button id="eq-import" class="btn small" title="Fichier ParametricEQ.txt ou GraphicEQ.txt d'autoeq.app">Importer AutoEQ…</button>
+      <input id="eq-file" type="file" accept=".txt,text/plain" hidden>
+      <label class="chk" title="Le casque et les enceintes gardent chacun leur réglage"><input type="checkbox" id="eq-per-device"> Un réglage par sortie</label>
+    </div>
+    <div id="eq-save-row" class="eq-tools" hidden>
+      <input id="eq-name" class="eq-name" placeholder="Nom du préréglage" maxlength="40" spellcheck="false">
+      <button id="eq-name-ok" class="btn small primary">Enregistrer</button>
+    </div>
+    <p class="hint">Quand il est actif, l'égaliseur modifie le signal : la lecture n'est plus bit-perfect.</p>
+  </div>
+
+  <div id="ambient" class="ambient" hidden>
+    <div class="amb-bg"><img class="amb-layer" alt=""><img class="amb-layer" alt=""></div>
+    <div class="amb-tint"></div>
+    <div class="amb-top">
+      <button id="amb-close" class="amb-btn" title="Quitter (Échap)" aria-label="Quitter le mode ambiance"><svg class="ic"><use href="#i-minimize"/></svg></button>
+      <span id="amb-clock" class="amb-clock"></span>
+    </div>
+    <div class="amb-main">
+      <div class="amb-art"><img id="amb-cover" class="amb-cover" alt=""></div>
+      <div class="amb-info">
+        <div id="amb-title" class="amb-title"></div>
+        <div id="amb-artist" class="amb-artist"></div>
+        <div id="amb-album" class="amb-album"></div>
+        <div class="amb-progress"><span id="amb-pos">0:00</span><div class="amb-bar"><i id="amb-fill"></i></div><span id="amb-dur">0:00</span></div>
+        <div class="amb-ctrl">
+          <button class="amb-btn" data-amb="prev" aria-label="Précédent"><svg class="ic solid"><use href="#i-skip-back"/></svg></button>
+          <button class="amb-btn main" data-amb="toggle" aria-label="Lecture / pause"><svg class="ic solid"><use id="amb-play-ic" href="#i-pause"/></svg></button>
+          <button class="amb-btn" data-amb="next" aria-label="Suivant"><svg class="ic solid"><use href="#i-skip-forward"/></svg></button>
+          <button id="amb-like" class="amb-btn heart-amb" data-like-track="" aria-label="J'aime"><svg class="ic"><use href="#i-heart"/></svg></button>
+          <div class="amb-vol">
+            <svg class="ic"><use id="amb-vol-ic" href="#i-volume-2"/></svg>
+            <input id="amb-volume" type="range" min="0" max="100" value="100" aria-label="Volume">
+            <span id="amb-vol-val">100</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="amb-next" class="amb-next"></div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

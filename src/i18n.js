@@ -1,0 +1,636 @@
+// Traduction de l'interface (français → anglais).
+// L'app est écrite en français ; en anglais, chaque texte affiché passe par ce dictionnaire
+// au moment où il entre dans la page (MutationObserver). Les textes composés (nombres, noms)
+// passent par les règles RULES. Chargé avant main.js.
+(() => {
+  let pref = "auto";
+  try {
+    pref = localStorage.getItem("lang") || "auto";
+  } catch {}
+  const sys = (navigator.languages && navigator.languages[0]) || navigator.language || "fr";
+  const lang = pref === "fr" || pref === "en" ? pref : /^fr\b/i.test(sys) ? "fr" : "en";
+  window.LANG = lang;
+  window.LANG_PREF = pref;
+  window.LOCALE = lang === "en" ? "en-US" : "fr-FR";
+  document.documentElement.lang = lang;
+
+  const EN = {
+    // Navigation, lecteur
+    "Musique": "Music",
+    "Albums": "Albums",
+    "Dossiers": "Folders",
+    "Playlists": "Playlists",
+    "Paramètres": "Settings",
+    "Rechercher": "Search",
+    "Recherche…": "Search…",
+    "Retour": "Back",
+    "Lecture": "Playback",
+    "Lecture / pause": "Play / pause",
+    "Lecture en cours": "Now playing",
+    "Précédent": "Previous",
+    "Suivant": "Next",
+    "Piste précédente": "Previous track",
+    "Piste suivante": "Next track",
+    "Avancer de 10 s": "Forward 10 s",
+    "Reculer de 10 s": "Back 10 s",
+    "Monter le volume": "Volume up",
+    "Baisser le volume": "Volume down",
+    "Couper / rétablir le son": "Mute / unmute",
+    "Volume": "Volume",
+    "File de lecture": "Queue",
+    "À suivre": "Up next",
+    "Rien en lecture.": "Nothing playing.",
+    "Aller à la piste en cours": "Go to current track",
+    "Aléatoire": "Shuffle",
+    "Aléatoire activé": "Shuffle on",
+    "Aléatoire activé (sans enchaîner deux fois le même artiste)": "Shuffle on (never the same artist twice in a row)",
+    "Aléatoire désactivé": "Shuffle off",
+    "Répétition": "Repeat",
+    "Répéter la file": "Repeat queue",
+    "Fin de la file : s'arrêter": "End of queue: stop",
+    "Fin de la file : continuer avec des titres proches": "End of queue: continue with similar tracks",
+    "Radio : la suite avec des titres proches": "Radio: keep going with similar tracks",
+    "Agrandir": "Maximize",
+    "Réduire": "Minimize",
+    "Fermer": "Close",
+    "Onglet Musique": "Music tab",
+    "Onglet Albums": "Albums tab",
+    "Onglet Dossiers": "Folders tab",
+    "Onglet Playlists": "Playlists tab",
+    "Infos": "Info",
+    "Inconnu": "Unknown",
+    "Artiste inconnu": "Unknown artist",
+    "Album inconnu": "Unknown album",
+    "Artistes divers": "Various artists",
+    "Artistes": "Artists",
+    "Artiste": "Artist",
+    "Album": "Album",
+    "Titre": "Title",
+    "Titres": "Tracks",
+    "Durée": "Duration",
+    "Année": "Year",
+    "Genre": "Genre",
+    "Disque": "Disc",
+    "Format": "Format",
+    "Taille": "Size",
+    "Position": "Position",
+    "Source": "Source",
+    "Photo": "Photo",
+    "Pochette": "Cover",
+    "Fichiers": "Files",
+    "Résultats": "Results",
+    "Aucun résultat.": "No results.",
+    "Aucune piste.": "No tracks.",
+    "Dossier vide.": "Empty folder.",
+    "Aucune piste trouvée dans ce dossier.": "No tracks found in this folder.",
+    "Aucune bibliothèque pour l'instant.": "No library yet.",
+    "Choisis le dossier où se trouve ta musique.": "Choose the folder where your music lives.",
+    "Choisis d'abord le dossier de ta bibliothèque dans les paramètres.": "First choose your library folder in Settings.",
+    "Choisir le dossier de musique": "Choose music folder",
+    "Choisir un dossier": "Choose a folder",
+    "Analyse de la bibliothèque…": "Scanning library…",
+    "Analyse du dossier…": "Scanning folder…",
+    "Analyse…": "Scanning…",
+    "Bibliothèque": "Library",
+    "Bibliothèque mise à jour": "Library updated",
+    "Fichier introuvable": "File not found",
+    "Tout lire": "Play all",
+    "Lire": "Play",
+    "Lire l'album": "Play album",
+    "Chargement…": "Loading…",
+    "Erreur": "Error",
+    "Annuler": "Cancel",
+    "Enregistrer": "Save",
+    "Enregistrer…": "Save…",
+    "Enregistrement…": "Saving…",
+    "Supprimer": "Delete",
+    "Retirer": "Remove",
+    "Renommer": "Rename",
+    "Modifier": "Edit",
+    "Ouvrir": "Open",
+    "Lancer": "Start",
+    "Restaurer": "Restore",
+    "Nouveau": "New",
+    "Confirmer la suppression": "Confirm deletion",
+    "Écoute": "Listening",
+    "MusicPi": "MusicPi",
+    "Effacer": "Clear",
+    "En lecture": "Playing",
+    "Gérer l'album": "Manage album",
+    "Changer la photo": "Change photo",
+    "Modifier, pochette, correction, renommage": "Edit, cover, fix, rename",
+    "Électronique": "Electronic",
+    "Fermer = réduire": "Close = minimize",
+    "Fermer la fenêtre la range dans la zone de notification ; la musique continue.": "Closing the window tucks it into the notification area; the music keeps playing.",
+    "Dans l'app, tape l'adresse « à la maison » puis ce code. Il ne sert qu'une fois ; l'adresse Tailscale est retenue toute seule.": "In the app, enter the “at home” address, then this code. It works only once; the Tailscale address is remembered automatically.",
+    "Plusieurs fichiers obtiendraient le même nom : ajoute {track} ou {disc} au modèle.": "Several files would get the same name: add {track} or {disc} to the pattern.",
+
+    // Cœurs et playlists
+    "J'aime": "Like",
+    "J'aime l'album": "Like album",
+    "Je n'aime plus": "Unlike",
+    "Je n'aime plus l'album": "Unlike album",
+    "J'aime le titre en cours": "Like current track",
+    "Titres aimés": "Liked tracks",
+    "Albums aimés": "Liked albums",
+    "Retirer des titres aimés": "Remove from liked tracks",
+    "Nouvelle playlist": "New playlist",
+    "Nom de la playlist": "Playlist name",
+    "Ajouter à une playlist…": "Add to playlist…",
+    "Retirer de la playlist": "Remove from playlist",
+    "Playlist vide. Clic droit sur des titres ou un album › « Ajouter à une playlist ».": "Empty playlist. Right-click tracks or an album › “Add to playlist”.",
+    "Touche le cœur à côté d'un titre pour le retrouver ici.": "Tap the heart next to a track to find it here.",
+    "Touche le cœur à côté du titre d'un album pour le retrouver ici.": "Tap the heart next to an album title to find it here.",
+    "Les plus écoutés": "Most played",
+    "Écoutés récemment": "Recently played",
+    "Ajoutés récemment": "Recently added",
+    "Jamais écoutés": "Never played",
+    "Aucune lecture": "Nothing playing",
+    "Rien pour l'instant : les écoutes se comptent à partir de maintenant.": "Nothing yet: plays are counted from now on.",
+    "Lance « Tout réanalyser » (Paramètres › Bibliothèque) une fois pour connaître les dates d'ajout.": "Run “Rescan everything” (Settings › Library) once to get the dates added.",
+
+    // Menus contextuels, éditeur
+    "Modifier le titre…": "Edit track…",
+    "Modifier les infos…": "Edit info…",
+    "Changer la pochette…": "Change cover…",
+    "Changer la photo…": "Change photo…",
+    "Corriger avec MusicBrainz / Discogs…": "Fix with MusicBrainz / Discogs…",
+    "Renommer les fichiers…": "Rename files…",
+    "Renommage…": "Renaming…",
+    "Renommage ·": "Rename ·",
+    "Infos ·": "Info ·",
+    "Pochette ·": "Cover ·",
+    "Correction": "Fix",
+    "Infos corrigées": "Info fixed",
+    "Pochette mise à jour": "Cover updated",
+    "Photo mise à jour": "Photo updated",
+    "Valeurs multiples": "Multiple values",
+    "Les champs « Valeurs multiples » ne sont modifiés que si tu les remplis.": "“Multiple values” fields are only changed if you fill them in.",
+    "Artiste (pistes)": "Artist (tracks)",
+    "Artiste de l'album": "Album artist",
+    "Numéros de piste et de disque": "Track and disc numbers",
+    "Pochette dans le dossier": "Cover in folder",
+    "Fichier sur le PC…": "File on this PC…",
+    "Aucune pochette trouvée.": "No cover found.",
+    "Aucune photo trouvée.": "No photo found.",
+    "Utiliser cette photo": "Use this photo",
+    "Téléchargement de la pochette…": "Downloading cover…",
+    "Téléchargement et intégration de la pochette…": "Downloading and embedding cover…",
+    "Enregistrement de la photo…": "Saving photo…",
+    "Enregistrer aussi la pochette en « cover.jpg » à côté des fichiers.": "Also save the cover as “cover.jpg” next to the files.",
+    "La photo est enregistrée en « artist.jpg » dans le dossier de l'artiste quand il en a un. Sans photo, l'app affiche la pochette d'un album.": "The photo is saved as “artist.jpg” in the artist's folder when there is one. Without a photo, the app shows an album cover.",
+    "Chargement de la fiche…": "Loading release…",
+    "Sources :": "Sources:",
+    "Sources indisponibles :": "Sources unavailable:",
+    "Ajoute ton jeton Discogs dans les paramètres pour l'inclure.": "Add your Discogs token in Settings to include it.",
+    "Ajoute ton jeton Discogs dans les paramètres": "Add your Discogs token in Settings",
+    "Modèle": "Pattern",
+    "Champs :": "Fields:",
+    "Tout est déjà rangé ainsi": "Everything is already organized this way",
+    "Modification annulée": "Change undone",
+    "· annulé": "· undone",
+
+    // Paramètres : navigation
+    "Son et volume": "Sound and volume",
+    "Sortie audio": "Audio output",
+    "Classement et fichiers": "Organization and files",
+    "Historique des modifications": "Change history",
+    "Interface": "Interface",
+    "Apparence": "Appearance",
+    "Mode ambiance": "Ambient mode",
+    "Raccourcis clavier": "Keyboard shortcuts",
+    "Connexions": "Connections",
+    "Téléphone": "Phone",
+    "Services en ligne": "Online services",
+    "Système": "System",
+    "Windows et sauvegarde": "Windows and backup",
+    "Comment les morceaux s'enchaînent, et ce qui se passe à la fin de la file.": "How tracks flow into each other, and what happens at the end of the queue.",
+    "Niveau des morceaux, limites et réglages du signal.": "Track levels, limits and signal settings.",
+    "Le périphérique qui joue la musique, et la façon dont le son lui est envoyé.": "The device that plays the music, and how the sound is sent to it.",
+    "Où se trouve ta musique.": "Where your music lives.",
+    "Comment la bibliothèque est rangée, ici et sur le disque.": "How the library is organized, here and on disk.",
+    "Les changements faits sur tes fichiers, annulables.": "Changes made to your files, which you can undo.",
+    "Thème, couleur et affichage.": "Theme, color and display.",
+    "Plein écran avec la pochette, quand tu n'es pas devant l'ordinateur.": "Full screen with the cover, for when you're away from the computer.",
+    "L'app Android : écoute, télécommande et albums hors ligne.": "The Android app: listening, remote control and offline albums.",
+    "Pochettes, fiches d'albums et écoutes partagées.": "Covers, album info and scrobbling.",
+    "Démarrage, zone de notification, et sauvegarde de tes données.": "Startup, notification area, and backing up your data.",
+
+    // Lecture
+    "Enchaînement": "Transitions",
+    "Fondu enchaîné": "Crossfade",
+    "Le morceau suivant commence pendant que celui-ci s'efface.": "The next track starts while this one fades out.",
+    "Fondre aussi dans un même album": "Also crossfade within an album",
+    "Sinon, les titres d'un album s'enchaînent sans blanc, comme sur le disque (live, albums concepts).": "Otherwise an album's tracks play gaplessly, as on the record (live, concept albums).",
+    "Fondu à la pause et à la reprise": "Fade on pause and resume",
+    "Évite le petit claquement quand on coupe le son en plein morceau.": "Avoids the small click when stopping mid-track.",
+    "À la fin de la file": "At the end of the queue",
+    "S'arrêter": "Stop",
+    "Recommencer": "Start over",
+    "Continuer avec des titres proches": "Continue with similar tracks",
+    "Le bouton répétition du lecteur fait la même chose.": "The player's repeat button does the same.",
+    "Mélange la file sans enchaîner deux titres du même artiste quand c'est possible.": "Shuffles the queue without playing two tracks by the same artist in a row when possible.",
+    "Reprendre au démarrage": "Resume on startup",
+    "Retrouver la file et le morceau là où tu t'étais arrêté.": "Pick up the queue and track where you left off.",
+    "Mode travail": "Practice mode",
+    "Mode travail (afficher / masquer)": "Practice mode (show / hide)",
+    "Mode travail (ralentir, boucler)": "Practice mode (slow down, loop)",
+    "Vitesse": "Speed",
+    "Plus lent": "Slower",
+    "Plus rapide": "Faster",
+    "Ralentir (−5 %)": "Slow down (−5%)",
+    "Accélérer (+5 %)": "Speed up (+5%)",
+    "Revenir à 100 %": "Back to 100%",
+    "Boucle": "Loop",
+    "Boucle : début ici": "Loop: start here",
+    "Boucle : fin ici": "Loop: end here",
+    "Boucle : effacer": "Loop: clear",
+    "Effacer la boucle": "Clear loop",
+    "La fin de la boucle doit être après son début.": "The loop end must be after its start.",
+    "Ajoute bass_fx.dll pour ralentir sans changer la hauteur.": "Add bass_fx.dll to slow down without changing pitch.",
+
+    // Son
+    "Volume des morceaux (ReplayGain)": "Track volume (ReplayGain)",
+    "Égalisation du volume": "Volume leveling",
+    "Met tous les morceaux au même niveau sonore grâce aux infos ReplayGain des fichiers. « Par album » garde les écarts voulus entre les titres d'un album.": "Plays every track at the same loudness using the files' ReplayGain info. “Per album” keeps the intended differences between an album's tracks.",
+    "Désactivée": "Off",
+    "Par titre": "Per track",
+    "Par album": "Per album",
+    "Préampli": "Preamp",
+    "Pour remonter ou baisser l'ensemble.": "To raise or lower everything.",
+    "Ne jamais saturer": "Never clip",
+    "Limite le gain à la crête du fichier.": "Limits the gain to the file's peak.",
+    "Limites": "Limits",
+    "Volume maximum": "Maximum volume",
+    "Le curseur de volume ne peut pas dépasser cette limite (utile en mode exclusif).": "The volume slider can't go above this limit (useful in exclusive mode).",
+    "Mono": "Mono",
+    "Stéréo": "Stereo",
+    "Les deux canaux mélangés.": "Both channels mixed together.",
+    "Balance": "Balance",
+    "Centrer": "Center",
+    "Égaliseur": "Equalizer",
+    "Égaliseur 10 bandes": "10-band equalizer",
+    "Préréglages, tes propres réglages, un réglage par sortie et import AutoEQ.": "Presets, your own settings, one setting per output and AutoEQ import.",
+    "Ouvrir l'égaliseur": "Open equalizer",
+    "Afficher l'égaliseur": "Show equalizer",
+    "Activer l'égaliseur": "Enable equalizer",
+    "Activer / désactiver l'égaliseur": "Turn equalizer on / off",
+    "Préréglage": "Preset",
+    "Personnalisé": "Custom",
+    "Plat": "Flat",
+    "Basses +": "Bass +",
+    "Basses −": "Bass −",
+    "Aigus +": "Treble +",
+    "Aigus −": "Treble −",
+    "Voix": "Vocal",
+    "Classique": "Classical",
+    "Remettre à plat": "Reset to flat",
+    "Nom du préréglage": "Preset name",
+    "Supprimer ce préréglage": "Delete this preset",
+    "Ce nom est déjà celui d'un préréglage fourni.": "That name is already used by a built-in preset.",
+    "Réglage enregistré": "Setting saved",
+    "Un réglage par sortie": "One setting per output",
+    "Le casque et les enceintes gardent chacun leur réglage": "Headphones and speakers each keep their own setting",
+    "Réglage retenu pour chaque sortie": "Setting kept for each output",
+    "Importer AutoEQ…": "Import AutoEQ…",
+    "Fichier ParametricEQ.txt ou GraphicEQ.txt d'autoeq.app": "ParametricEQ.txt or GraphicEQ.txt file from autoeq.app",
+    "Fichier non reconnu : il faut un ParametricEQ.txt ou un GraphicEQ.txt d'AutoEQ.": "File not recognized: an AutoEQ ParametricEQ.txt or GraphicEQ.txt is needed.",
+    "Quand il est actif, l'égaliseur modifie le signal : la lecture n'est plus bit-perfect.": "When on, the equalizer changes the signal: playback is no longer bit-perfect.",
+    "Préamplification": "Preamp",
+    "Pré-amplification": "Preamp",
+
+    // Sortie
+    "Sortie": "Output",
+    "Périphérique": "Device",
+    "Périphérique par défaut de Windows": "Windows default device",
+    "Défaut de Windows": "Windows default",
+    "« Défaut de Windows » suit le périphérique choisi dans Windows.": "“Windows default” follows the device chosen in Windows.",
+    "Sortie modifiée": "Output changed",
+    "Mode": "Mode",
+    "Partagé": "Shared",
+    "Exclusif": "Exclusive",
+    "Exclusif (bit-perfect)": "Exclusive (bit-perfect)",
+    "Partagé : le son passe par le mixeur de Windows (volume Windows actif). Exclusif : l'app parle seule au DAC, en bit-perfect.": "Shared: sound goes through the Windows mixer (Windows volume applies). Exclusive: the app talks to the DAC alone, bit-perfect.",
+    "passe par le mixeur de Windows, volume de Windows actif": "goes through the Windows mixer, Windows volume applies",
+    "bit-perfect, ignore le volume de Windows : baisse l'ampli avant": "bit-perfect, ignores the Windows volume: turn the amp down first",
+    "Mode exclusif : pense à régler le volume sur le DAC ou l'ampli": "Exclusive mode: remember to set the volume on the DAC or amp",
+    "Fréquence en mode exclusif": "Exclusive mode sample rate",
+    "Celle du fichier (bit-perfect)": "The file's own (bit-perfect)",
+    "Imposer une fréquence rééchantillonne ce qui n'y est pas déjà.": "Forcing a rate resamples anything that isn't already at it.",
+    "Tampon de sortie": "Output buffer",
+    "Plus court : réactions plus rapides. Plus long : plus stable si le son craque.": "Shorter: faster response. Longer: more stable if the sound crackles.",
+    "Très court": "Very short",
+    "Court": "Short",
+    "(normale)": "(normal)",
+    "(conseillé)": "(recommended)",
+    "(défaut)": "(default)",
+    "Lent": "Slow",
+    "Doux": "Smooth",
+    "Avancé": "Advanced",
+    "Converti ·": "Converted ·",
+    "Windows ·": "Windows ·",
+    "Bit-perfect ·": "Bit-perfect ·",
+
+    // Dossiers, classement
+    "Dossiers de musique": "Music folders",
+    "Dossier principal": "Main folder",
+    "Ajouter un dossier": "Add a folder",
+    "Aucun dossier choisi": "No folder chosen",
+    "Ce dossier est déjà dans la bibliothèque.": "This folder is already in the library.",
+    "Tout réanalyser": "Rescan everything",
+    "Mises à jour": "Updates",
+    "Détection automatique": "Automatic detection",
+    "Les albums ajoutés, déplacés ou supprimés apparaissent tout seuls (vérification toutes les 30 s et au démarrage).": "Albums that are added, moved or deleted show up on their own (checked every 30 s and on startup).",
+    "Formats": "Formats",
+    "Formats à ignorer": "Formats to ignore",
+    "Ils n'apparaissent plus dans l'app mais restent sur le disque. Le FLAC est toujours lu.": "They no longer appear in the app but stay on disk. FLAC is always played.",
+    "Classement": "Sorting",
+    "Ignorer les articles": "Ignore articles",
+    "« The Cure » rangé à C, « Les Négresses Vertes » à N.": "“The Cure” under C, “Les Négresses Vertes” under N.",
+    "Compilations": "Compilations",
+    "Albums à plusieurs artistes, ou « Various Artists ».": "Albums with several artists, or “Various Artists”.",
+    "Sous « Artistes divers »": "Under “Various artists”",
+    "Par artiste de chaque titre": "By each track's artist",
+    "Artistes des pistes": "Track artists",
+    "Modèle de rangement": "Organization pattern",
+    "Utilisé par « Renommer les fichiers ». Champs :": "Used by “Rename files”. Fields:",
+    "Proposé": "Suggested",
+    "Actuel": "Current",
+    "Aucune modification pour l'instant.": "No changes yet.",
+    "déplacement": "move",
+    "déplacements": "moves",
+
+    // Apparence
+    "Thème": "Theme",
+    "Clair": "Light",
+    "Sombre": "Dark",
+    "Automatique": "Automatic",
+    "Comme Windows": "Match Windows",
+    "Couleur d'accent": "Accent color",
+    "Couleur de Windows": "Windows color",
+    "« Couleur de Windows » reprend l'accent de Paramètres Windows › Personnalisation › Couleurs, dans une nuance adaptée au mode clair ou sombre.": "“Windows color” uses the accent from Windows Settings › Personalization › Colors, in a shade suited to light or dark mode.",
+    "Corail": "Coral",
+    "Affichage": "Display",
+    "Agrandit ou réduit toute l'interface.": "Enlarges or shrinks the whole interface.",
+    "Densité des listes": "List density",
+    "Compacte": "Compact",
+    "Normale": "Normal",
+    "Aérée": "Roomy",
+    "Vue à l'ouverture": "Startup view",
+    "Badges de qualité": "Quality badges",
+    "« 24/96 » sur les albums en haute résolution, « MP3 » sur les fichiers compressés.": "“24/96” on high-resolution albums, “MP3” on compressed files.",
+    "Haute résolution": "High resolution",
+    "Langue": "Language",
+    "La langue de l'interface. L'app redémarre l'affichage pour l'appliquer.": "The interface language. The app reloads its display to apply it.",
+    "Français": "Français",
+    "English": "English",
+
+    // Ambiance
+    "Fond": "Background",
+    "Pochette floutée et couleurs": "Blurred cover and colors",
+    "Couleurs de l'album": "Album colors",
+    "Sombre et sobre": "Dark and plain",
+    "Horloge": "Clock",
+    "Lancement automatique": "Automatic start",
+    "Pendant la lecture": "During playback",
+    "Quand personne n'a touché l'ordinateur depuis un moment (toutes applications confondues).": "When nobody has touched the computer for a while (in any app).",
+    "Après": "After",
+    "Bouton": "Button",
+    "Lance un morceau pour passer en mode ambiance.": "Play a track to switch to ambient mode.",
+    "Quitter (Échap)": "Exit (Esc)",
+    "Quitter le mode ambiance": "Exit ambient mode",
+    "Mode ambiance (plein écran)": "Ambient mode (full screen)",
+
+    // Raccourcis
+    "Tout réinitialiser": "Reset all",
+    "Clique sur un raccourci puis appuie sur la nouvelle combinaison. Échap annule, Retour arrière efface. Les touches multimédia du clavier (lecture, suivant, précédent) fonctionnent partout, même quand l'app est en arrière-plan.": "Click a shortcut, then press the new combination. Esc cancels, Backspace clears. The keyboard's media keys (play, next, previous) work everywhere, even when the app is in the background.",
+    "Appuie sur une touche…": "Press a key…",
+    "Aucun": "None",
+    "Actifs": "On",
+    "Inactifs": "Off",
+    "Maj": "Shift",
+    "Espace": "Space",
+    "Entrée": "Enter",
+    "Échap": "Esc",
+    "Retour arrière": "Backspace",
+    "Suppr": "Del",
+    "Début": "Start",
+    "Fin": "End",
+
+    // Téléphone
+    "App Android": "Android app",
+    "Partager la bibliothèque avec le téléphone": "Share the library with the phone",
+    "Quand c'est activé, ton téléphone peut parcourir ta bibliothèque, écouter tes fichiers, en télécharger pour les écouter hors ligne, et piloter la lecture sur ce PC. Seuls les appareils appairés y ont accès.": "When on, your phone can browse your library, play your files, download them to listen offline, and control playback on this PC. Only paired devices have access.",
+    "Adresse à la maison": "Address at home",
+    "Adresse hors de chez toi (Tailscale)": "Address away from home (Tailscale)",
+    "Pas de réseau détecté": "No network detected",
+    "Tailscale n'est pas installé": "Tailscale isn't installed",
+    "Port": "Port",
+    "Code d'appairage": "Pairing code",
+    "Nouveau code": "New code",
+    "Appareils appairés": "Paired devices",
+    "Aucun appareil pour l'instant.": "No devices yet.",
+    "Nouveau téléphone appairé": "New phone paired",
+    "Appareil retiré : il n'a plus accès à ta bibliothèque.": "Device removed: it no longer has access to your library.",
+
+    // Services
+    "Discogs": "Discogs",
+    "Jeton personnel": "Personal token",
+    "Colle ici ton jeton": "Paste your token here",
+    "À créer sur discogs.com › Settings › Developers › « Generate new token ». Il sert aux pochettes, fiches d'albums et photos d'artistes. MusicBrainz, iTunes et Deezer marchent sans compte.": "Create one at discogs.com › Settings › Developers › “Generate new token”. It's used for covers, album info and artist photos. MusicBrainz, iTunes and Deezer work without an account.",
+    "MusicBrainz, iTunes, Deezer.": "MusicBrainz, iTunes, Deezer.",
+    "Last.fm": "Last.fm",
+    "Last.fm :": "Last.fm:",
+    "Scrobbles et morceau en cours.": "Scrobbles and now playing.",
+    "Crée d'abord une clé d'API gratuite sur last.fm/api/account/create (nom : MusicPi, le reste peut rester vide), puis remplis ces champs. Le mot de passe ne sert qu'une fois et n'est pas enregistré.": "First create a free API key at last.fm/api/account/create (name: MusicPi, the rest can stay empty), then fill in these fields. The password is used only once and isn't saved.",
+    "Clé d'API": "API key",
+    "Secret partagé": "Shared secret",
+    "Nom d'utilisateur": "Username",
+    "Mot de passe": "Password",
+    "Se connecter": "Log in",
+    "Se déconnecter": "Log out",
+    "Remplis les quatre champs.": "Fill in all four fields.",
+    "Connecté en tant que": "Logged in as",
+    "Connecté à Last.fm : tes écoutes seront envoyées": "Connected to Last.fm: your plays will be scrobbled",
+    "Envoyer mes écoutes": "Scrobble my plays",
+
+    // Système
+    "Windows": "Windows",
+    "Lancer au démarrage": "Launch at startup",
+    "Discrètement, dans la zone de notification.": "Quietly, in the notification area.",
+    "Contrôles multimédia": "Media controls",
+    "Titre et pochette dans le panneau du volume et sur l'écran verrouillé ; touches multimédia du clavier.": "Title and cover in the volume flyout and on the lock screen; keyboard media keys.",
+    "Indisponibles : les touches multimédia restent gérées directement.": "Unavailable: media keys are still handled directly.",
+    "Sauvegarde": "Backup",
+    "Réglages, cœurs, playlists et écoutes": "Settings, hearts, playlists and plays",
+    "Dans un fichier, pour réinstaller ou retrouver tout ça sur un autre PC. La musique n'est pas dedans.": "In a file, to reinstall or get all this back on another PC. The music isn't included.",
+    "Exporter…": "Export…",
+    "Importer…": "Import…",
+    "Sauvegarde enregistrée :": "Backup saved:",
+    "Sauvegarde restaurée : rechargement…": "Backup restored: reloading…",
+
+    // Unités, mots des pluriels
+    "titre": "track", "titres": "tracks",
+    "piste": "track", "pistes": "tracks",
+    "album": "album", "albums": "albums",
+    "artiste": "artist", "artistes": "artists",
+    "fichier": "file", "fichiers": "files",
+    "erreur": "error", "erreurs": "errors",
+    "pochette": "cover", "pochettes": "covers",
+    "écoute": "play", "écoutes": "plays",
+    "nouvel album": "new album", "nouveaux albums": "new albums",
+    "titre ajouté": "track added", "titres ajoutés": "tracks added",
+    "fichier modifié": "file changed", "fichiers modifiés": "files changed",
+    "fichier renommé": "file renamed", "fichiers renommés": "files renamed",
+    "fichier à renommer": "file to rename", "fichiers à renommer": "files to rename",
+    "Go": "GB",
+    "Mo": "MB",
+    "désactivé": "off",
+    "centre": "center",
+    "gauche": "left",
+    "droite": "right",
+
+    // Messages venant du moteur (Rust)
+    "Moteur audio non initialisé": "Audio engine not initialized",
+    "Périphérique introuvable": "Device not found",
+    "Le périphérique est occupé (une autre application l'utilise peut-être en mode exclusif)": "The device is busy (another app may be using it in exclusive mode)",
+    "Playlist introuvable (supprimée ?)": "Playlist not found (deleted?)",
+    "Aucun périphérique de sortie": "No output device",
+    "Fondu enchaîné suspendu (mode travail ou boucle)": "Crossfade paused (practice mode or loop)",
+    "Pas de fondu vers le titre suivant : même album (enchaînement sans blanc)": "No crossfade to the next track: same album (gapless)",
+    "Pas de fondu : durée inconnue": "No crossfade: unknown duration",
+    "compressé": "compressed",
+    "WASAPI exclusif": "WASAPI exclusive",
+    "WASAPI partagé": "WASAPI shared",
+    "Mode partagé : le son passe par le mixeur de Windows (volume et format réglés dans Windows)": "Shared mode: sound goes through the Windows mixer (volume and format set in Windows)",
+    "Égaliseur actif": "Equalizer on",
+    "Volume logiciel actif : règle le volume sur le DAC ou l'ampli pour rester bit-perfect": "Software volume on: set the volume on the DAC or amp to stay bit-perfect",
+    "Source compressée avec pertes : bit-perfect par rapport au fichier décodé": "Lossy source: bit-perfect relative to the decoded file",
+    "Réponse inattendue de Last.fm": "Unexpected response from Last.fm",
+    "Aucun dossier de bibliothèque": "No library folder",
+    "Opération introuvable ou déjà annulée": "Operation not found or already undone",
+    "Disponible seulement sous Windows": "Only available on Windows",
+  };
+
+  const q = (s) => "“" + s + "”";
+  // Textes composés : [motif, remplacement]. Les remplacements reçoivent les groupes déjà traduits si besoin.
+  const RULES = [
+    [/^(.+) à « (.+) »$/, (m, a, b) => `${a} to ${q(b)}`],
+    [/^Playlist créée avec (.+)$/, (m, a) => `Playlist created with ${a}`],
+    [/^Playlist « (.+) » supprimée$/, (m, a) => `Playlist ${q(a)} deleted`],
+    [/^Préréglage « (.+) » enregistré$/, (m, a) => `Preset ${q(a)} saved`],
+    [/^Préréglage « (.+) » supprimé$/, (m, a) => `Preset ${q(a)} deleted`],
+    [/^Réglage retenu pour « (.+) »$/, (m, a) => `Setting kept for ${q(a)}`],
+    [/^Égaliseur de « (.+) »$/, (m, a) => `Equalizer for ${q(a)}`],
+    [/^Correction importée : (.+)$/, (m, a) => `Correction imported: ${a}`],
+    [/^Ce raccourci était utilisé par « (.+) », il lui a été retiré\.$/, (m, a) => `This shortcut was used by ${q(tr(a))}; it was removed from it.`],
+    [/^Aucun résultat pour « (.+) »\.$/, (m, a) => `No results for ${q(a)}.`],
+    [/^Résultats pour « (.+) »$/, (m, a) => `Results for ${q(a)}`],
+    [/^Lecture en cours · (.+)$/, (m, a) => `Now playing · ${a}`],
+    [/^(.+) dans la bibliothèque$/, (m, a) => `${a} in the library`],
+    [/^Modifier l'artiste \((.+)\)…$/, (m, a) => `Edit artist (${a})…`],
+    [/^Modifier (\d+) titres…$/, (m, a) => `Edit ${a} tracks…`],
+    [/^Lire les (\d+) titres$/, (m, a) => `Play ${a} tracks`],
+    [/^Appliquer à (.+)$/, (m, a) => `Apply to ${a}`],
+    [/^(\d[\d\s,.]* errors?) : (.*)$/, (m, a, b) => `${a}: ${b}`],
+    [/^L'album contient (.+), la fiche en a (\d+) : les pistes sont associées dans l'ordre, vérifie la correspondance\.$/, (m, a, b) => `The album has ${a}, the release has ${b}: tracks are matched in order, check that they line up.`],
+    [/^(\d+) canaux$/, (m, a) => `${a} channels`],
+    [/^(.+) \(défaut\)$/, (m, a) => `${a} (default)`],
+    [/^dans le lecteur, ou$/, () => "in the player, or"],
+    [/^\. Échap pour revenir\.$/, () => ". Esc to go back."],
+    [/^Échap pour revenir\.$/, () => "Esc to go back."],
+    [/^début ·$/, () => "start ·"],
+    [/^fin$/, () => "end"],
+    [/^(\d+) %$/, (m, a) => `${a}%`],
+    [/^(\d+) % \(normale\)$/, (m, a) => `${a}% (normal)`],
+    [/^(.+) \(conseillé\)$/, (m, a) => `${a} (recommended)`],
+    [/^Artistes · (.+)$/, (m, a) => `Artists · ${a}`],
+    [/^Disque (\d+)$/, (m, a) => `Disc ${a}`],
+    [/^Lire (.+)$/, (m, a) => `Play ${a}`],
+    [/^Appairé le (.+)$/, (m, a) => `Paired on ${a}`],
+    [/^(\d+) minutes$/, (m, a) => `${a} minutes`],
+    [/^Correction (.+) · (.+)$/, (m, a, b) => `${a} fix · ${b}`],
+    [/^— « \/ » crée un dossier\. \{disc\} n'apparaît que pour les albums à plusieurs disques\.$/, () => "— “/” creates a folder. {disc} only appears for multi-disc albums."],
+    // Moteur audio
+    [/^Fondu enchaîné de ([\d.,]+) s prévu vers le titre suivant \(déjà fait (\d+) fois(.*)\)$/, (m, a, b, c) =>
+      `Crossfade of ${a} s planned to the next track (done ${b} times${c.replace(", enveloppes ", ", envelopes ").replace("OK", "OK").replace("en partie refusées", "partly refused").replace("refusées", "refused")})`],
+    [/^Rééchantillonné de (.+) vers (.+)$/, (m, a, b) => `Resampled from ${a} to ${b}`],
+    [/^Résolution réduite de (\d+) à (\d+) bits$/, (m, a, b) => `Bit depth reduced from ${a} to ${b} bits`],
+    [/^Mode travail : vitesse à (\d+) %$/, (m, a) => `Practice mode: speed at ${a}%`],
+    [/^(\d+) canal\(aux\) source envoyé\(s\) sur (\d+)$/, (m, a, b) => `${a} source channel(s) sent to ${b}`],
+    [/^(.+) existe déjà$/, (m, a) => `${a} already exists`],
+    [/^Registre Windows : erreur (.+)$/, (m, a) => `Windows registry: error ${a}`],
+    [/^Opération invalide : (.+)$/, (m, a) => `Invalid operation: ${a}`],
+  ];
+
+  function tr(s) {
+    if (lang !== "en" || !s) return s;
+    const key = s.replace(/\s+/g, " ").trim();
+    if (!key) return s;
+    let out = EN[key];
+    if (out === undefined) {
+      for (const [re, fn] of RULES) {
+        const m = key.match(re);
+        if (m) {
+          out = fn(...m);
+          break;
+        }
+      }
+    }
+    if (out === undefined || out === key) return s;
+    // On garde les espaces autour du texte d'origine.
+    const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0];
+    return lead + out + trail;
+  }
+  window.tr = tr;
+  // Pluriel : en anglais, 0 prend le pluriel ; en français non.
+  window.isPlural = (n) => (lang === "en" ? n !== 1 : n > 1);
+
+  if (lang !== "en") return;
+
+  const ATTRS = ["title", "aria-label", "placeholder"];
+  const DATA = ".name,.ti,.t1,.t2,.card-title,.card-sub,.np-title,.np-artist,.amb-title,.amb-artist,.pl-title,td";
+  const SKIP = new Set(["SCRIPT", "STYLE", "TEXTAREA", "CODE"]);
+  const skipEl = (el) => !el || SKIP.has(el.nodeName) || el.closest?.("[translate=no],[contenteditable=true]");
+  function text(node) {
+    if (skipEl(node.parentElement)) return;
+    const v = node.data;
+    if (!/[A-Za-zÀ-ÿ%]/.test(v)) return;
+    // Un seul mot dans un titre, un nom d'album ou d'artiste : c'est une donnée, pas l'interface.
+    if (!/\S\s+\S/.test(v) && node.parentElement.closest(DATA)) return;
+    const t = tr(v);
+    if (t !== v) node.data = t;
+  }
+  function attrs(el) {
+    for (const a of ATTRS) {
+      const v = el.getAttribute(a);
+      if (v) {
+        const t = tr(v);
+        if (t !== v) el.setAttribute(a, t);
+      }
+    }
+  }
+  function deep(root) {
+    if (root.nodeType === 3) return text(root);
+    if (root.nodeType !== 1 || skipEl(root)) return;
+    attrs(root);
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = w.nextNode())) {
+      if (n.nodeType === 3) text(n);
+      else if (n.hasAttributes()) attrs(n);
+    }
+  }
+  const mo = new MutationObserver((list) => {
+    for (const m of list) {
+      if (m.type === "childList") m.addedNodes.forEach(deep);
+      else if (m.type === "characterData") text(m.target);
+      else if (m.type === "attributes") attrs(m.target);
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  document.addEventListener("DOMContentLoaded", () => {
+    deep(document.documentElement);
+    document.title = tr(document.title);
+  });
+})();
