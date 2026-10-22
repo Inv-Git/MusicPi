@@ -25,6 +25,7 @@ MusicPi is the heir of [MusicBee](https://getmusicbee.com/), the Windows music p
 - Practice mode: slow down without changing pitch, A/B loop
 - Shuffle that avoids the same artist twice in a row, repeat, radio mode at the end of the queue
 - Resume where you left off
+- Synced lyrics: `.lrc` files, lyrics tags, or [LRCLIB](https://lrclib.net) online, with click-to-seek and per-track offset
 
 **Library**
 - Several music folders, automatic detection of added, moved or deleted albums
@@ -41,7 +42,7 @@ MusicPi is the heir of [MusicBee](https://getmusicbee.com/), the Windows music p
 **Android app**
 - Browse and play your library from the phone, at home or away (via Tailscale)
 - Remote control of the PC, with the phone's volume buttons
-- Albums and playlists downloaded for offline listening (original FLAC files)
+- Albums and playlists downloaded for offline listening (original FLAC files), with their lyrics
 - Lighter Opus stream on mobile data
 - Hearts and playlists synced with the PC, pairing once with a 6-digit code
 
@@ -98,7 +99,7 @@ Open the `android` folder in [Android Studio](https://developer.android.com/stud
 - [Manrope](https://github.com/sharanda/manrope): typeface (SIL Open Font License)
 - Rust crates: lofty, ureq, image, souvlaki, serde
 - Android: Jetpack Compose, Media3 / ExoPlayer, OkHttp, Coil, kotlinx.serialization
-- Online data: [MusicBrainz](https://musicbrainz.org/), [Cover Art Archive](https://coverartarchive.org/), [Discogs](https://www.discogs.com/), Deezer, iTunes, [Last.fm](https://www.last.fm/)
+- Online data: [LRCLIB](https://lrclib.net) (lyrics), [MusicBrainz](https://musicbrainz.org/), [Cover Art Archive](https://coverartarchive.org/), [Discogs](https://www.discogs.com/), Deezer, iTunes, [Last.fm](https://www.last.fm/)
 
 ## License
 

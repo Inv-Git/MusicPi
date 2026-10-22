@@ -462,7 +462,7 @@ fun SettingsScreen(vm: MainViewModel, toast: (String) -> Unit) {
         }
         Section(tr("À propos"))
         Text(
-            tr("MusicPi 1.0.0 · Les fichiers téléchargés sont les originaux (FLAC), ils restent dans l'espace privé de l'app."),
+            tr("MusicPi 1.1.0 · Les fichiers téléchargés sont les originaux (FLAC), ils restent dans l'espace privé de l'app."),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp),

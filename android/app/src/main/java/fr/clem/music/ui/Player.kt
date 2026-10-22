@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Computer
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -47,6 +48,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import fr.clem.music.LyricLine
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -119,6 +129,7 @@ fun FullPlayer(vm: MainViewModel, close: () -> Unit, openAlbum: (String) -> Unit
     val t = now.path?.let { index?.byPath?.get(it) }
     var dragging by remember { mutableStateOf<Float?>(null) }
     var practiceOpen by remember { mutableStateOf(now.speed != 100 || now.loop != null) }
+    var showLyrics by remember { mutableStateOf(false) }
 
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
         Column(
@@ -127,6 +138,11 @@ fun FullPlayer(vm: MainViewModel, close: () -> Unit, openAlbum: (String) -> Unit
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 IconButton(onClick = close) { Icon(Icons.Rounded.KeyboardArrowDown, tr("Fermer"), modifier = Modifier.size(30.dp)) }
                 Spacer(Modifier.weight(1f))
+                IconButton(
+                    onClick = { showLyrics = !showLyrics },
+                    colors = if (showLyrics) IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.primary) else IconButtonDefaults.iconButtonColors(),
+                ) { Icon(Icons.Rounded.Mic, tr("Paroles")) }
+                Spacer(Modifier.width(4.dp))
                 TargetChip(Icons.Rounded.PhoneAndroid, tr("Téléphone"), now.target == Target.Phone) { vm.switchTarget(Target.Phone) }
                 Spacer(Modifier.width(8.dp))
                 TargetChip(Icons.Rounded.Computer, vm.repo.prefs.pcName.ifBlank { "PC" }, now.target == Target.Pc, enabled = link == Link.Online) {
@@ -134,7 +150,8 @@ fun FullPlayer(vm: MainViewModel, close: () -> Unit, openAlbum: (String) -> Unit
                 }
             }
             Spacer(Modifier.height(12.dp))
-            TrackCover(vm, now.path, Modifier.fillMaxWidth().aspectRatio(1f), size = 800, corner = 14)
+            if (showLyrics) LyricsBox(vm, now, Modifier.fillMaxWidth().aspectRatio(0.86f))
+            else TrackCover(vm, now.path, Modifier.fillMaxWidth().aspectRatio(1f), size = 800, corner = 14)
             Spacer(Modifier.height(24.dp))
             val coll by vm.collections.collectAsState()
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -297,5 +314,92 @@ private fun LoopButton(label: String, value: Double?, modifier: Modifier, onClic
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.width(8.dp))
         Text(value?.let { fmtPrecise(it) } ?: "—", color = if (value != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+
+// --- Paroles -----------------------------------------------------------------------------------
+
+@Composable
+private fun LyricsBox(vm: MainViewModel, now: Now, modifier: Modifier) {
+    val st by vm.lyrics.collectAsState()
+    LaunchedEffect(now.path) { now.path?.let { vm.loadLyrics(it) } }
+    val cur = st?.takeIf { it.path == now.path }
+    val l = cur?.out?.lyrics
+    Box(modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
+        val msg = when {
+            now.path == null -> tr("Rien en lecture sur le PC")
+            cur == null || cur.loading -> tr("Recherche des paroles…")
+            l?.instrumental == true -> tr("Morceau instrumental.")
+            l == null || l.lines.isEmpty() -> tr("Pas de paroles pour ce morceau.")
+            else -> null
+        }
+        if (msg != null) {
+            Text(msg, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Center).padding(24.dp))
+        } else if (l != null) {
+            if (l.synced) SyncedLyrics(vm, now, l.lines, cur?.out?.offset ?: 0) else PlainLyrics(l.lines)
+        }
+    }
+}
+
+@Composable
+private fun PlainLyrics(lines: List<LyricLine>) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
+        for (line in lines) {
+            Text(line.text.ifEmpty { " " }, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 2.dp))
+        }
+    }
+}
+
+@Composable
+private fun SyncedLyrics(vm: MainViewModel, now: Now, lines: List<LyricLine>, offsetMs: Int) {
+    // Position estimée entre deux mises à jour.
+    var pos by remember { mutableStateOf(now.position) }
+    LaunchedEffect(now.position, now.playing, now.speed) {
+        val base = now.position
+        val t0 = System.nanoTime()
+        pos = base
+        while (now.playing) {
+            kotlinx.coroutines.delay(100)
+            pos = base + (System.nanoTime() - t0) / 1e9 * now.speed / 100.0
+        }
+    }
+    val shift = offsetMs / 1000.0
+    val idx = lines.indexOfLast { (it.t ?: 0.0) <= pos - shift + 0.05 }
+    val scroll = rememberScrollState()
+    val ys = remember(lines) { mutableStateMapOf<Int, Int>() }
+    val hs = remember(lines) { mutableStateMapOf<Int, Int>() }
+    var viewH by remember { mutableIntStateOf(0) }
+    val padPx = with(androidx.compose.ui.platform.LocalDensity.current) { 160.dp.roundToPx() }
+    LaunchedEffect(idx, viewH) {
+        val y = ys[idx] ?: return@LaunchedEffect
+        val target = (padPx + y + (hs[idx] ?: 0) / 2 - viewH / 2).coerceAtLeast(0)
+        scroll.animateScrollTo(target)
+    }
+    Column(
+        Modifier.fillMaxSize().onSizeChanged { viewH = it.height }.verticalScroll(scroll).padding(horizontal = 12.dp, vertical = 160.dp),
+    ) {
+        lines.forEachIndexed { i, line ->
+            val current = i == idx
+            val color = when {
+                current -> MaterialTheme.colorScheme.onSurface
+                i < idx -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+            }
+            Text(
+                line.text.ifEmpty { "♪" },
+                color = color,
+                fontSize = if (current) 24.sp else 20.sp,
+                lineHeight = if (current) 31.sp else 27.sp,
+                fontWeight = if (current) FontWeight.ExtraBold else FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { ys[i] = it.positionInParent().y.toInt(); hs[i] = it.size.height }
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (current) MaterialTheme.colorScheme.surfaceVariant else androidx.compose.ui.graphics.Color.Transparent)
+                    .clickable(enabled = line.t != null) { line.t?.let { vm.seek((it + shift).coerceAtLeast(0.0)) } }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
     }
 }

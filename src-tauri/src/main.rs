@@ -8,6 +8,7 @@ mod engine;
 mod eq;
 mod lastfm;
 mod library;
+mod lyrics;
 mod manage;
 mod master;
 mod online;
@@ -21,7 +22,7 @@ mod system;
 mod tags;
 mod watch;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -39,6 +40,7 @@ struct AppState {
     phone: Arc<phone::Phone>,
     collections: Arc<collections::Store>,
     stats: Arc<stats::Store>,
+    lyrics: lyrics::Store,
     data_dir: PathBuf,
 }
 
@@ -167,6 +169,115 @@ fn lastfm_set(state: State<AppState>, scrobble: bool, logout: bool) {
             s.lastfm.user.clear();
         }
     });
+}
+
+// ---------------------------------------------------------------------------
+// Paroles
+// ---------------------------------------------------------------------------
+
+/// Paroles d'un morceau : `.lrc` ou tags d'abord, puis cache, puis LRCLIB (si permis).
+/// `force` : refait la recherche en ligne même si elle n'avait rien donné récemment.
+pub fn lyrics_for(app: &AppHandle, path: &str, force: bool) -> lyrics::LyricsOut {
+    let st = app.state::<AppState>();
+    let p = PathBuf::from(path);
+    let entry = st.lyrics.get(path);
+    let out = |l: Option<lyrics::Lyrics>| lyrics::LyricsOut { lyrics: l, offset: entry.offset };
+    if let Some(l) = lyrics::local(&p) {
+        return out(Some(l));
+    }
+    if entry.lyrics.is_some() && !force {
+        return out(entry.lyrics.clone());
+    }
+    let prefs = st.settings.lock().unwrap().lyrics.clone();
+    if !prefs.online || (!force && now_secs().saturating_sub(entry.checked) < lyrics::RETRY_SECS) {
+        return out(entry.lyrics.clone());
+    }
+    let t = library::read(&p);
+    match lyrics::lrclib(&t.artist, &t.title, &t.album, t.duration, false) {
+        Ok(found) => {
+            if let (true, Some(l)) = (prefs.save_lrc, found.as_ref()) {
+                if !l.instrumental {
+                    let _ = lyrics::save_sidecar(&p, l);
+                }
+            }
+            st.lyrics.update(path, |e| {
+                e.checked = now_secs();
+                e.lyrics = found.clone();
+            });
+            out(found)
+        }
+        // Pas de réseau : on réessaiera la prochaine fois.
+        Err(_) => out(entry.lyrics.clone()),
+    }
+}
+
+#[tauri::command]
+async fn get_lyrics(app: AppHandle, path: String, force: Option<bool>) -> Result<lyrics::LyricsOut, String> {
+    blocking(move || lyrics_for(&app, &path, force.unwrap_or(false))).await
+}
+
+#[tauri::command]
+fn set_lyrics_offset(state: State<AppState>, path: String, offset: i32) {
+    state.lyrics.update(&path, |e| e.offset = offset.clamp(-30_000, 30_000));
+}
+
+#[tauri::command]
+fn set_lyrics_prefs(state: State<AppState>, online: bool, save_lrc: bool) {
+    state.update(|s| {
+        s.lyrics.online = online;
+        s.lyrics.save_lrc = save_lrc;
+    });
+}
+
+#[derive(serde::Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct LyricsTest {
+    tested: usize,
+    synced: usize,
+    plain: usize,
+    instrumental: usize,
+    none: usize,
+    errors: usize,
+}
+
+/// Essaie `count` morceaux pris au hasard dans la bibliothèque (fichiers, puis LRCLIB).
+#[tauri::command]
+async fn lyrics_test(app: AppHandle, state: State<'_, AppState>, count: usize) -> Result<LyricsTest, String> {
+    let path = state.library_path.clone();
+    blocking(move || {
+        let tracks = library::load_cache(&path);
+        let mut seed = now_secs() ^ 0x9e37_79b9_7f4a_7c15;
+        let mut pick: Vec<&library::Track> = Vec::new();
+        let n = count.min(tracks.len());
+        let mut used = std::collections::HashSet::new();
+        while pick.len() < n {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            let i = (seed % tracks.len() as u64) as usize;
+            if used.insert(i) {
+                pick.push(&tracks[i]);
+            }
+        }
+        let mut r = LyricsTest::default();
+        for (k, t) in pick.iter().enumerate() {
+            let found = match lyrics::local(Path::new(&t.path)) {
+                Some(l) => Ok(Some(l)),
+                None => lyrics::lrclib(&t.artist, &t.title, &t.album, t.duration, true),
+            };
+            match found {
+                Ok(Some(l)) if l.instrumental => r.instrumental += 1,
+                Ok(Some(l)) if l.synced => r.synced += 1,
+                Ok(Some(_)) => r.plain += 1,
+                Ok(None) => r.none += 1,
+                Err(_) => r.errors += 1,
+            }
+            r.tested += 1;
+            let _ = app.emit("lyrics-test", (k + 1, n));
+        }
+        r
+    })
+    .await
 }
 
 // ---------------------------------------------------------------------------
@@ -926,6 +1037,7 @@ fn main() {
                 phone: phone.clone(),
                 collections: coll,
                 stats: stats_store,
+                lyrics: lyrics::Store::load(data_dir.join("paroles.json")),
                 data_dir: data_dir.clone(),
             });
 
@@ -1037,6 +1149,10 @@ fn main() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            get_lyrics,
+            set_lyrics_offset,
+            set_lyrics_prefs,
+            lyrics_test,
             set_tray_lang,
             play,
             toggle,

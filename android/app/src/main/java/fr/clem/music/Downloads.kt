@@ -102,6 +102,8 @@ class Downloads(context: Context, private val repo: Repo) {
                     }
                     synchronized(this@Downloads) { files[t.path] = name }
                     save()
+                    // Paroles gardées pour l'écoute hors ligne (sans bloquer si le PC n'en a pas).
+                    runCatching { repo.lyrics(t.path) }
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 // Annulé par l'utilisateur.

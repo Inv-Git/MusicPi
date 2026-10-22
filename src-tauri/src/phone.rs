@@ -423,6 +423,13 @@ impl remote::Handler for Routes {
                 crate::on_played(&ph.app, &t.path, t.artist, t.title, t.album, t.duration);
                 Response::bytes(204, "text/plain", vec![])
             }
+            (true, "/api/lyrics") => match ph.allowed(&q("p")) {
+                Some(p) => {
+                    let out = crate::lyrics_for(&ph.app, &p.to_string_lossy(), false);
+                    Response::json(serde_json::to_string(&out).unwrap_or_default())
+                }
+                None => Response::error(404, "piste inconnue"),
+            },
             (true, "/api/collections") => {
                 let c = ph.app.state::<AppState>().collections.get();
                 Response::json(serde_json::to_string(&c).unwrap_or_default())

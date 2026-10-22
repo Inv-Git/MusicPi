@@ -58,8 +58,8 @@ object I18n {
         "Confirmer la suppression" to "Confirm deletion",
         "Supprimer tous les téléchargements" to "Delete all downloads",
         "À propos" to "About",
-        "MusicPi 1.0.0 · Les fichiers téléchargés sont les originaux (FLAC), ils restent dans l'espace privé de l'app." to
-            "MusicPi 1.0.0 · Downloaded files are the originals (FLAC); they stay in the app's private storage.",
+        "MusicPi 1.1.0 · Les fichiers téléchargés sont les originaux (FLAC), ils restent dans l'espace privé de l'app." to
+            "MusicPi 1.1.0 · Downloaded files are the originals (FLAC); they stay in the app's private storage.",
         // Bibliothèque, albums
         "Ajouter à une playlist" to "Add to playlist",
         "Ajouter à une playlist…" to "Add to playlist…",
@@ -123,6 +123,11 @@ object I18n {
         "titre" to "track", "titres" to "tracks",
         "album" to "album", "albums" to "albums",
         "titre introuvable" to "track not found", "titres introuvables" to "tracks not found",
+        // Paroles
+        "Paroles" to "Lyrics",
+        "Recherche des paroles…" to "Looking for lyrics…",
+        "Morceau instrumental." to "Instrumental track.",
+        "Pas de paroles pour ce morceau." to "No lyrics for this track.",
         // Erreurs (dont celles renvoyées par le PC)
         "Trop d'essais : génère un nouveau code sur le PC." to "Too many attempts: generate a new code on the PC.",
         "Appareil non appairé" to "Device not paired",

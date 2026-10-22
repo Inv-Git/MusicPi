@@ -7,9 +7,9 @@ use std::time::Duration;
 use serde::Serialize;
 use serde_json::Value;
 
-const UA: &str = "MusicPi/1.0 (lecteur audio personnel)";
+const UA: &str = "MusicPi/1.0 (https://github.com/Inv-Git/MusicPi)";
 
-fn agent() -> ureq::Agent {
+pub fn agent() -> ureq::Agent {
     ureq::AgentBuilder::new()
         .timeout(Duration::from_secs(20))
         .user_agent(UA)

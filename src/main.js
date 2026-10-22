@@ -39,13 +39,22 @@ const rootOf = (p) => allRoots().find((r) => p === r || p.startsWith(r.replace(/
 // Préférences d'affichage (enregistrées dans les réglages, gérées ici).
 let ui = {
   ignoreArticles: true, compilations: "various", zoom: 100, density: "normal", startView: "music", badges: true,
-  eqPresets: {}, eqPerDevice: false, eqByDevice: {}, ambientStyle: "cover", ambientClock: true,
+  eqPresets: {}, eqPerDevice: false, eqByDevice: {}, ambientStyle: "cover", ambientClock: true, ambientLyrics: false,
 };
 function saveUi() {
   invoke("set_ui", { ui });
 }
 let state = null;         // dernier état du moteur
 let queue = [];           // file de lecture envoyée au moteur
+// Paroles (voir la section « paroles » plus bas).
+let lyricsOpen = false;
+let lyricsPrefs = { online: true, saveLrc: false };
+let lyr = { path: null, data: null, offset: 0, loading: false };
+const lyrCache = new Map();
+let lyrIdx = -2;
+let lyrUserScroll = 0;
+let lyrLoopOn = false;
+let lyrStateRef = null, lyrStateAt = 0;
 
 const collator = new Intl.Collator("fr", { sensitivity: "base", numeric: true });
 // Les noms qui ne diffèrent que par la casse, les accents ou la ponctuation (« KATY PERRY » / « Katy Perry »)
@@ -554,6 +563,7 @@ function albumBlock(a) {
 function renderRight() {
   const el = $("right-pane");
   if (!el) return;
+  if (lyricsOpen) return renderLyricsPane(el);
   const cur = trackByPath.get(state?.path);
   const qi = state?.index ?? -1;
   const inQueue = cur && queue[qi]?.path === cur.path;
@@ -1070,7 +1080,7 @@ const SETTINGS_PAGES = {
   ambiance: ["Mode ambiance", "Plein écran avec la pochette, quand tu n'es pas devant l'ordinateur.", pageAmbiance],
   raccourcis: ["Raccourcis clavier", "", () => shortcutsSection()],
   telephone: ["Téléphone", "L'app Android : écoute, télécommande et albums hors ligne.", () => phoneSection()],
-  services: ["Services en ligne", "Pochettes, fiches d'albums et écoutes partagées.", pageServices],
+  services: ["Services en ligne", "Pochettes, fiches d'albums, paroles et écoutes partagées.", pageServices],
   systeme: ["Windows et sauvegarde", "Démarrage, zone de notification, et sauvegarde de tes données.", pageSysteme],
 };
 
@@ -1314,9 +1324,38 @@ function pageServices() {
              <label class="fld"><span>Mot de passe</span><input id="lf-pass" type="password" autocomplete="off"></label>
            </div>
            <div class="s-row s-actions"><span></span><div class="s-ctl"><button class="btn primary" data-lf-login>Se connecter</button></div></div>`
+    ) +
+    scard(
+      "Paroles",
+      srow("Chercher en ligne", "Sur LRCLIB (lrclib.net), base de paroles libre, quand le morceau n'a ni fichier .lrc ni paroles dans ses tags.", sw('id="lyr-online"', lyricsPrefs.online)) +
+        srow("Enregistrer en .lrc", "Les paroles trouvées en ligne sont aussi rangées à côté du morceau, pour rester disponibles hors ligne.", sw('id="lyr-save"', lyricsPrefs.saveLrc)) +
+        srow("Tester ma bibliothèque", "Cherche les paroles de 100 titres pris au hasard, pour voir combien en ont.", `<span class="hint" id="lyr-test-progress"></span><button class="btn small" data-lyr-test>Tester</button>`)
     )
   );
 }
+document.addEventListener("change", (e) => {
+  if (e.target.id !== "lyr-online" && e.target.id !== "lyr-save") return;
+  lyricsPrefs = { online: $("lyr-online").checked, saveLrc: $("lyr-save").checked };
+  invoke("set_lyrics_prefs", { online: lyricsPrefs.online, saveLrc: lyricsPrefs.saveLrc });
+  lyrCache.clear();
+});
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-lyr-test]");
+  if (!b) return;
+  b.disabled = true;
+  const p = $("lyr-test-progress");
+  if (p) p.textContent = "…";
+  try {
+    const r = await invoke("lyrics_test", { count: 100 });
+    if (p) p.textContent = "";
+    const pct = (n) => Math.round((n / Math.max(1, r.tested)) * 100) + " %";
+    toast(`Paroles : ${pct(r.synced)} synchronisées, ${pct(r.plain)} en texte, ${pct(r.instrumental)} instrumentaux, ${pct(r.none)} sans résultat` + (r.errors ? ` (${r.errors} erreurs réseau)` : ""));
+  } catch (err) {
+    toast(String(err), "error");
+  } finally {
+    b.disabled = false;
+  }
+});
 
 // --- Système ---------------------------------------------------------------------------------------
 
@@ -1587,6 +1626,8 @@ const paintVolume = () => {
   const v = Number($("volume").value);
   $("volume").style.setProperty("--v", v + "%");
   $("vol-ic").querySelector("use").setAttribute("href", v === 0 ? "#i-volume-x" : v < 50 ? "#i-volume-1" : "#i-volume-2");
+  document.body.classList.toggle("muted", v === 0);
+  $("vol-btn").title = v === 0 ? "Rétablir le son" : "Couper le son";
 };
 $("volume").addEventListener("input", (e) => {
   paintVolume();
@@ -1651,13 +1692,18 @@ listen("player-state", (e) => {
     sig.hidden = false;
     sig.classList.toggle("ok", s.signal.bitPerfect);
     sig.classList.toggle("shared", s.signal.shared);
-    const label = s.signal.shared ? "Windows · " : s.signal.bitPerfect ? "Bit-perfect · " : "Converti · ";
-    $("signal-label").textContent = label + s.signal.source;
+    // Libellé court (« FLAC 24/96 ») : la pastille de couleur dit l'état, le détail est dans l'infobulle.
+    const st = s.signal.shared ? "Partagé : son mixé par Windows" : s.signal.bitPerfect ? "Bit-perfect" : "Converti";
+    const t = trackByPath.get(s.path);
+    $("signal-label").textContent = t ? fmtLabel(t) : s.signal.source;
+    // Textes du moteur : en anglais, décimales avec un point et mots traduits.
+    const sx = (x) => (LANG === "en" ? tr(String(x).replace(/(\d),(\d)/g, "$1.$2").replace("partagé", "shared").replace("exclusif", "exclusive").replace("flottant", "float")) : x);
     $("signal-tip").innerHTML = `
-      <div><span class="k">Source</span><br><b>${esc(s.signal.source)}</b></div>
-      <div><span class="k">Sortie</span><br><b>${esc(s.signal.output)}</b></div>
+      <div><b>${esc(st)}</b></div>
+      <div><span class="k">Source</span><br><b>${esc(sx(s.signal.source))}</b></div>
+      <div><span class="k">Sortie</span><br><b>${esc(sx(s.signal.output))}</b></div>
       <div><span class="k">Périphérique</span><br><b>${esc(s.signal.device)}</b></div>
-      ${s.signal.notes.length ? `<ul>${s.signal.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}`;
+      ${s.signal.notes.length ? `<ul>${s.signal.notes.map((n) => `<li>${esc(sx(n))}</li>`).join("")}</ul>` : ""}`;
   } else if (s.error) {
     sig.hidden = false;
     sig.classList.remove("ok", "shared");
@@ -2161,6 +2207,7 @@ const ACTIONS = [
   ["tabFolders", "Onglet Dossiers"],
   ["tabPlaylists", "Onglet Playlists"],
   ["like", "J'aime le titre en cours"],
+  ["lyrics", "Paroles (afficher / masquer)"],
   ["ambient", "Mode ambiance (plein écran)"],
   ["settings", "Paramètres"],
   ["practice", "Mode travail (afficher / masquer)"],
@@ -2189,6 +2236,7 @@ const DEFAULT_SHORTCUTS = {
   tabFolders: "Ctrl+3",
   tabPlaylists: "Ctrl+4",
   like: "Ctrl+L",
+  lyrics: "Ctrl+Shift+L",
   ambient: "F11",
   settings: "Ctrl+,",
   practice: "Ctrl+P",
@@ -2279,6 +2327,7 @@ function runAction(a) {
     case "tabPlaylists": return document.querySelector('.tabs [data-view="playlists"]').click();
     case "ambient": return ambientOpen ? closeAmbient() : openAmbient();
     case "like": return s.path && collOp({ op: "likeTrack", path: s.path, on: !likedT.has(s.path) });
+    case "lyrics": return toggleLyrics();
     case "settings": return document.querySelector('.icon-btn[data-view="settings"]').click();
     case "practice": return setPractice(!practiceOn());
     case "loopStart": return markLoop("a");
@@ -2367,6 +2416,7 @@ new ResizeObserver(([e]) => {
 // --- mode ambiance : plein écran, pochette, couleurs tirées de la pochette -----------------
 
 let ambientOpen = false;
+let ambSeekDragging = () => false;
 let ambientWasMax = false;
 let ambientPath = null;
 let ambientLayer = 0;
@@ -2384,6 +2434,8 @@ async function openAmbient() {
   amb.hidden = false;
   requestAnimationFrame(() => amb.classList.add("show"));
   ambientUpdate(state, null);
+  renderAmbientLyrics();
+  lyrStart();
   wake();
   clockTick();
   // Fenêtre agrandie : Windows garde la place de la barre des tâches en plein écran
@@ -2516,8 +2568,10 @@ function ambientUpdate(s, prev) {
     $("amb-next").innerHTML = nx ? `<span>À suivre</span> ${esc(nx.title)} <span>· ${esc(nx.artist)}</span>` : "";
   }
   const p = s.duration ? Math.min(1, s.position / s.duration) : 0;
-  $("amb-fill").style.transform = `scaleX(${p})`;
-  $("amb-pos").textContent = fmtTime(s.position);
+  if (!ambSeekDragging()) {
+    $("amb-fill").style.transform = `scaleX(${p})`;
+    $("amb-pos").textContent = fmtTime(s.position);
+  }
   $("amb-dur").textContent = fmtTime(s.duration);
   $("amb-play-ic").setAttribute("href", s.playing ? "#i-pause" : "#i-play");
   amb.classList.toggle("paused", !s.playing);
@@ -2572,6 +2626,42 @@ amb.addEventListener("click", (e) => {
   if (b) invoke(b.dataset.amb);
 });
 $("amb-close").addEventListener("click", closeAmbient);
+$("amb-mute").addEventListener("click", (e) => {
+  e.stopPropagation();
+  runAction("mute");
+});
+$("vol-btn").addEventListener("click", () => runAction("mute"));
+// Barre de progression du mode ambiance : clic ou glisser pour se déplacer dans le morceau.
+{
+  const bar = document.querySelector(".amb-bar");
+  const ratio = (e) => {
+    const r = bar.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  };
+  const show = (p) => {
+    $("amb-fill").style.transform = `scaleX(${p})`;
+    $("amb-pos").textContent = fmtTime(p * (state?.duration || 0));
+  };
+  let drag = false;
+  bar.addEventListener("pointerdown", (e) => {
+    if (!state?.duration) return;
+    e.stopPropagation();
+    drag = true;
+    bar.setPointerCapture(e.pointerId);
+    bar.classList.add("drag");
+    show(ratio(e));
+  });
+  bar.addEventListener("pointermove", (e) => drag && show(ratio(e)));
+  const end = (e) => {
+    if (!drag) return;
+    drag = false;
+    bar.classList.remove("drag");
+    invoke("seek", { position: ratio(e) * (state?.duration || 0) });
+  };
+  bar.addEventListener("pointerup", end);
+  bar.addEventListener("pointercancel", () => { drag = false; bar.classList.remove("drag"); });
+  ambSeekDragging = () => drag;
+}
 $("ambient-btn").addEventListener("click", openAmbient);
 
 // Lancement automatique quand personne n'a touché l'ordinateur depuis un moment.
@@ -3616,6 +3706,230 @@ go = function (r, push) {
   return _go(r, push);
 };
 
+// --- paroles ---------------------------------------------------------------------------------
+// Fichier .lrc ou tags du morceau, sinon LRCLIB. Synchronisées : la ligne en cours s'allume,
+// le texte défile, un clic sur une ligne y saute.
+
+
+const lyricsWanted = () => lyricsOpen || (ambientOpen && ui.ambientLyrics);
+const lyrSynced = () => !!(lyr.data && lyr.data.synced && lyr.data.lines.length);
+
+async function loadLyrics(path, force = false) {
+  if (!path) {
+    lyr = { path: null, data: null, offset: 0, loading: false };
+    return lyrRender();
+  }
+  if (!force && lyrCache.has(path)) {
+    const r = lyrCache.get(path);
+    lyr = { path, data: r.lyrics || null, offset: r.offset || 0, loading: false };
+    lyrIdx = -2;
+    return lyrRender();
+  }
+  lyr = { path, data: null, offset: 0, loading: true };
+  lyrIdx = -2;
+  lyrRender();
+  const r = await invoke("get_lyrics", { path, force }).catch(() => null);
+  if (lyr.path !== path) return;
+  if (r) lyrCache.set(path, r);
+  lyr = { path, data: r?.lyrics || null, offset: r?.offset || 0, loading: false };
+  lyrRender();
+}
+
+function lyrSourceLabel(d) {
+  const src = { lrc: "fichier .lrc", tags: "dans le fichier", lrclib: "LRCLIB" }[d.source] || d.source;
+  return (d.synced ? "Synchronisées · " : "Texte · ") + src;
+}
+const lyrOffsetLabel = () => (lyr.offset > 0 ? "+" : lyr.offset < 0 ? "−" : "") + (Math.abs(lyr.offset) / 1000).toFixed(1).replace(".", DEC) + " s";
+
+function lyrLinesHtml(d) {
+  return d.lines
+    .map((l, i) =>
+      d.synced
+        ? `<button class="lyr-line" data-lyr-i="${i}">${l.text ? esc(l.text) : "♪"}</button>`
+        : `<p class="lyr-line plain">${l.text ? esc(l.text) : "&nbsp;"}</p>`
+    )
+    .join("");
+}
+
+/** Colonne de droite (vue Musique) en mode paroles. */
+function renderLyricsPane(el) {
+  if (lyricsWanted() && state?.path && lyr.path !== state.path && !lyr.loading) loadLyrics(state.path);
+  const d = lyr.data;
+  let body;
+  if (!state?.path) body = `<div class="empty lyr-msg">Rien en lecture.</div>`;
+  else if (lyr.loading) body = `<div class="empty lyr-msg">Recherche des paroles…</div>`;
+  else if (d?.instrumental) body = `<div class="empty lyr-msg">Morceau instrumental.</div>`;
+  else if (!d || !d.lines.length)
+    body = `<div class="empty lyr-msg"><p>Pas de paroles pour ce morceau.</p>${lyricsPrefs.online ? `<button class="btn small" data-lyr-retry>Chercher à nouveau</button>` : `<p class="hint">La recherche en ligne est désactivée (Paramètres › Services en ligne).</p>`}</div>`;
+  else body = `<div class="lyr-list ${d.synced ? "synced" : ""}" translate="no">${lyrLinesHtml(d)}</div>`;
+  el.innerHTML = `
+    <div class="pane-head lyr-head">${icon("mic-vocal")}<span>Paroles</span>${d && d.lines.length ? `<span class="lyr-src">${esc(lyrSourceLabel(d))}</span>` : ""}
+      <button class="icon-btn lyr-close" data-lyr-close title="Masquer les paroles" aria-label="Masquer les paroles">${icon("x")}</button></div>
+    <div class="pane-body lyr-body ${d && d.lines.length ? "" : "empty-body"}" id="lyr-body">${body}</div>
+    ${lyrSynced() ? `<div class="lyr-foot"><span>Décalage</span><button class="btn small" data-lyr-off="-500" aria-label="Plus tôt">−</button><b id="lyr-off">${lyrOffsetLabel()}</b><button class="btn small" data-lyr-off="500" aria-label="Plus tard">+</button></div>` : ""}`;
+  lyrIdx = -2;
+  lyrStart();
+}
+
+/** Paroles en grand dans le mode ambiance. */
+function renderAmbientLyrics() {
+  const box = $("amb-lyrics");
+  if (!box) return;
+  const on = ambientOpen && ui.ambientLyrics && lyrSynced();
+  amb.classList.toggle("lyr", on);
+  $("amb-lyr")?.classList.toggle("on", !!ui.ambientLyrics);
+  box.hidden = !on;
+  if (!on) return;
+  const t = trackByPath.get(state?.path);
+  box.innerHTML = `<div class="amb-lyr-head" translate="no">${t ? esc(t.title) + " · " + esc(t.artist) : ""}</div><div class="amb-lyr-lines" translate="no">${lyrLinesHtml(lyr.data)}</div>`;
+  lyrIdx = -2;
+  lyrStart();
+}
+
+function lyrRender() {
+  if (lyricsOpen) {
+    const el = $("right-pane");
+    if (el) renderLyricsPane(el);
+  }
+  if (ambientOpen) renderAmbientLyrics();
+}
+
+/** Position estimée entre deux mises à jour du moteur (toutes les 200 ms). */
+function lyrPosition() {
+  const s = state;
+  if (!s) return 0;
+  if (s !== lyrStateRef) {
+    lyrStateRef = s;
+    lyrStateAt = performance.now();
+  }
+  const rate = 1 + (typeof tempoPct === "number" ? tempoPct : 0) / 100;
+  const extra = s.playing ? ((performance.now() - lyrStateAt) / 1000) * rate : 0;
+  return (s.position || 0) + extra - lyr.offset / 1000;
+}
+
+function lyrCurrentIndex(lines, pos) {
+  let lo = 0, hi = lines.length - 1, ans = -1;
+  while (lo <= hi) {
+    const m = (lo + hi) >> 1;
+    if ((lines[m].t ?? 0) <= pos + 0.05) {
+      ans = m;
+      lo = m + 1;
+    } else hi = m - 1;
+  }
+  return ans;
+}
+
+function lyrPaint(idx) {
+  // Panneau
+  const list = document.querySelector("#lyr-body .lyr-list.synced");
+  if (list) {
+    list.querySelectorAll(".lyr-line").forEach((b, i) => {
+      b.classList.toggle("past", i < idx);
+      b.classList.toggle("current", i === idx);
+    });
+    const cur = list.children[idx];
+    if (cur && performance.now() - lyrUserScroll > 4000) scrollToChild($("lyr-body"), cur, "center", true);
+  }
+  // Mode ambiance : 2 lignes avant, la ligne en cours, 4 après.
+  const al = document.querySelector("#amb-lyrics .amb-lyr-lines");
+  if (al) {
+    al.querySelectorAll(".lyr-line").forEach((b, i) => {
+      const d = i - Math.max(idx, 0);
+      b.classList.toggle("current", i === idx);
+      b.classList.toggle("past", i < idx);
+      b.hidden = d < -2 || d > 4;
+    });
+  }
+}
+
+function lyrTick() {
+  if (!lyricsWanted()) {
+    lyrLoopOn = false;
+    return;
+  }
+  if (state?.path && lyr.path !== state.path && !lyr.loading) loadLyrics(state.path);
+  if (lyrSynced()) {
+    const idx = lyrCurrentIndex(lyr.data.lines, lyrPosition());
+    if (idx !== lyrIdx) {
+      lyrIdx = idx;
+      lyrPaint(idx);
+    }
+  }
+  requestAnimationFrame(lyrTick);
+}
+function lyrStart() {
+  if (lyrLoopOn || !lyricsWanted()) return;
+  lyrLoopOn = true;
+  requestAnimationFrame(lyrTick);
+}
+
+function toggleLyrics(on = !lyricsOpen) {
+  if (on === lyricsOpen) return;
+  const el = $("right-pane");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const apply = () => {
+    lyricsOpen = on;
+    document.body.classList.toggle("lyrics-open", on);
+    $("lyrics-btn").classList.toggle("on", on);
+    if (on && state?.path) loadLyrics(state.path);
+    if (on && route.view !== "music") go({ view: "music", artist: route.artist });
+    else renderRight();
+    lyrStart();
+  };
+  // Sortie du contenu actuel, puis entrée du nouveau (la colonne s'élargit en même temps).
+  if (!el || reduce || route.view !== "music") return apply();
+  el.classList.remove("pane-in");
+  el.classList.add("pane-out");
+  clearTimeout(toggleLyrics.t);
+  toggleLyrics.t = setTimeout(() => {
+    el.classList.remove("pane-out");
+    apply();
+    void el.offsetWidth;
+    el.classList.add("pane-in", on ? "to-lyrics" : "to-queue");
+    toggleLyrics.t = setTimeout(() => el.classList.remove("pane-in", "to-lyrics", "to-queue"), 750);
+  }, 140);
+}
+
+document.addEventListener("click", (e) => {
+  const line = e.target.closest("[data-lyr-i]");
+  if (line && lyrSynced()) {
+    const l = lyr.data.lines[+line.dataset.lyrI];
+    if (l?.t != null) invoke("seek", { position: Math.max(0, l.t + lyr.offset / 1000) });
+    lyrUserScroll = 0;
+    return;
+  }
+  if (e.target.closest("[data-lyr-close]")) return toggleLyrics(false);
+  if (e.target.closest("[data-lyr-retry]") && state?.path) return loadLyrics(state.path, true);
+  const off = e.target.closest("[data-lyr-off]");
+  if (off && lyr.path) {
+    lyr.offset = Math.max(-30000, Math.min(30000, lyr.offset + +off.dataset.lyrOff));
+    const c = lyrCache.get(lyr.path);
+    if (c) c.offset = lyr.offset;
+    invoke("set_lyrics_offset", { path: lyr.path, offset: lyr.offset });
+    const b = $("lyr-off");
+    if (b) b.textContent = lyrOffsetLabel();
+    lyrIdx = -2;
+  }
+});
+// Défilement à la main : on suspend le suivi automatique quelques secondes.
+document.addEventListener("wheel", (e) => {
+  if (e.target.closest("#lyr-body")) lyrUserScroll = performance.now();
+}, { passive: true });
+$("lyrics-btn").addEventListener("click", () => toggleLyrics());
+$("amb-lyr").addEventListener("click", (e) => {
+  e.stopPropagation();
+  ui.ambientLyrics = !ui.ambientLyrics;
+  saveUi();
+  if (ui.ambientLyrics && state?.path && lyr.path !== state.path) loadLyrics(state.path);
+  renderAmbientLyrics();
+  lyrStart();
+});
+listen("lyrics-test", (e) => {
+  const [done, total] = e.payload;
+  const el = $("lyr-test-progress");
+  if (el) el.textContent = `${done} / ${total}`;
+});
+
 // --- écran d'accueil (logo animé) -------------------------------------------------------------
 
 const splashStart = performance.now();
@@ -3651,6 +3965,7 @@ setTimeout(hideSplash, 6000); // au cas où le démarrage traînerait
   paintModes();
   applyMode(s.theme);
   refreshWindowsAccent();
+  lyricsPrefs = { online: s.lyrics?.online ?? true, saveLrc: s.lyrics?.saveLrc ?? false };
   settings = { discogsToken: s.discogsToken || "", renamePattern: s.renamePattern || settings.renamePattern, coverFile: s.coverFile ?? true, lastfm: s.lastfm || {} };
   renderEq();
   root = s.libraryFolder;

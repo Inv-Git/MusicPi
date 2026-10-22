@@ -380,6 +380,37 @@ class Repo(private val context: Context, val prefs: Prefs) {
     // --- écoutes faites sur le téléphone (comptées sur le PC, et Last.fm) -------------
 
     private val playedFile = File(context.filesDir, "ecoutes-attente.json")
+
+    // --- Paroles -------------------------------------------------------------------------------
+
+    private val lyricsDir = File(context.filesDir, "paroles")
+
+    private fun lyricsFile(path: String): File {
+        var h = -0x340d631b7bdddcdbL
+        for (b in path.toByteArray()) { h = h xor (b.toLong() and 0xff); h *= 0x100000001b3L }
+        return File(lyricsDir, java.lang.Long.toHexString(h) + ".json")
+    }
+
+    /** Paroles d'un morceau : demandées au PC, gardées sur le téléphone pour le hors ligne. */
+    suspend fun lyrics(path: String): LyricsOut? = withContext(Dispatchers.IO) {
+        val f = lyricsFile(path)
+        val b = base
+        if (b != null) {
+            val got = runCatching {
+                val url = b.resolve("api/lyrics")!!.newBuilder().addQueryParameter("p", path).build()
+                client.newCall(authed(url).build()).execute().use { r ->
+                    onUnauthorized(r)
+                    if (!r.isSuccessful) return@use null
+                    val txt = r.body!!.string()
+                    lyricsDir.mkdirs()
+                    f.writeText(txt)
+                    json.decodeFromString(LyricsOut.serializer(), txt)
+                }
+            }.getOrNull()
+            if (got != null) return@withContext got
+        }
+        if (f.exists()) runCatching { json.decodeFromString(LyricsOut.serializer(), f.readText()) }.getOrNull() else null
+    }
     private val playedQueue: MutableList<String> = runCatching {
         json.decodeFromString(ListSerializer(String.serializer()), playedFile.readText()).toMutableList()
     }.getOrDefault(mutableListOf())

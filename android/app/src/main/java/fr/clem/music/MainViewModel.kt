@@ -211,6 +211,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         Target.Phone -> controller?.seekToPrevious() ?: Unit
     }
 
+    // --- Paroles ---------------------------------------------------------------------------------
+
+    data class LyricsState(val path: String, val loading: Boolean, val out: LyricsOut?)
+
+    private val _lyrics = MutableStateFlow<LyricsState?>(null)
+    val lyrics: StateFlow<LyricsState?> = _lyrics
+
+    fun loadLyrics(path: String) {
+        val cur = _lyrics.value
+        if (cur != null && cur.path == path && (cur.loading || cur.out != null)) return
+        _lyrics.value = LyricsState(path, true, null)
+        viewModelScope.launch {
+            val r = repo.lyrics(path)
+            if (_lyrics.value?.path == path) _lyrics.value = LyricsState(path, false, r ?: LyricsOut())
+        }
+    }
+
     fun seek(sec: Double) = when (target.value) {
         Target.Pc -> repo.cmd(buildJsonObject { put("cmd", "seek"); put("position", sec) })
         Target.Phone -> controller?.seekTo((sec * 1000).toLong()) ?: Unit

@@ -47,11 +47,28 @@ pub struct Settings {
     pub cover_file: bool,
     /// App Android : serveur, appareils appairés.
     pub phone: crate::phone::PhoneSettings,
+    /// Paroles : recherche en ligne, enregistrement en .lrc.
+    pub lyrics: LyricsPrefs,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct LyricsPrefs {
+    /// Chercher sur lrclib.net quand le morceau n'a pas de paroles.
+    pub online: bool,
+    /// Enregistrer les paroles trouvées en ligne dans un .lrc à côté du morceau.
+    pub save_lrc: bool,
+}
+
+impl Default for LyricsPrefs {
+    fn default() -> Self {
+        Self { online: true, save_lrc: false }
+    }
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { library_folder: None, output: OutputPref::default(), volume: 1.0, eq: EqParams::default(), shortcuts: Default::default(), theme: "light".into(), accent: "coral".into(), ambient_auto: false, ambient_delay: 300, audio: AudioOpts::default(), resume: true, shuffle: false, extra_folders: vec![], watch: true, ignore_ext: vec![], ui: serde_json::json!({}), tray_close: false, lastfm: LastFm::default(), discogs_token: String::new(), rename_pattern: "{albumartist}/{year} - {album}/{disc}{track} - {title}".into(), cover_file: true, phone: Default::default() }
+        Self { library_folder: None, output: OutputPref::default(), volume: 1.0, eq: EqParams::default(), shortcuts: Default::default(), theme: "light".into(), accent: "coral".into(), ambient_auto: false, ambient_delay: 300, audio: AudioOpts::default(), resume: true, shuffle: false, extra_folders: vec![], watch: true, ignore_ext: vec![], ui: serde_json::json!({}), tray_close: false, lastfm: LastFm::default(), discogs_token: String::new(), rename_pattern: "{albumartist}/{year} - {album}/{disc}{track} - {title}".into(), cover_file: true, phone: Default::default(), lyrics: LyricsPrefs::default() }
     }
 }
 

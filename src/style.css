@@ -1139,3 +1139,102 @@ html[data-density="airy"] .artist-row, html[data-density="airy"] .pl-item { padd
 @keyframes sFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 /* La page des paramètres n'a pas l'animation d'entrée des autres vues à chaque rendu. */
 .page:has(> .settings-page) { animation: none; }
+
+/* ========================================================================
+   Paroles
+   ======================================================================== */
+.lyr-head { color: var(--text); font-size: 13px; }
+.lyr-head svg.ic { width: 16px; height: 16px; color: var(--accent); }
+.lyr-src { margin-left: auto; padding: 2px 8px; border-radius: 6px; background: var(--select); color: var(--text-2); font-size: 11px; font-weight: 500; white-space: nowrap; }
+.lyr-head .lyr-close { margin-left: auto; width: 26px; height: 26px; background: none; }
+.lyr-src + .lyr-close { margin-left: 2px; }
+.lyr-head .lyr-close svg.ic { width: 15px; height: 15px; color: var(--muted); }
+.lyr-body { padding: 16px 10px 45vh; }
+.lyr-list { display: grid; gap: 2px; }
+.lyr-line {
+  display: block; width: 100%; margin: 0; padding: 6px 12px; border-radius: 10px; text-align: left;
+  font-size: 16px; line-height: 1.45; font-weight: 700; letter-spacing: 0; color: var(--text-2);
+  transition: color .35s ease, background .35s ease, font-size .25s ease;
+}
+.lyr-line.past { color: var(--muted); }
+.lyr-line.current { color: var(--text); font-size: 19px; font-weight: 800; background: var(--select); }
+.lyr-list.synced .lyr-line:hover:not(.current) { background: var(--hover); }
+.lyr-line.plain { font-size: 15px; font-weight: 500; color: var(--text); padding: 1px 12px; }
+.lyr-msg { padding: 40px 16px; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.lyr-msg p { margin: 0; }
+.lyr-foot { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.lyr-foot span { margin-right: auto; }
+.lyr-foot b { min-width: 52px; text-align: center; color: var(--text-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .lyr-line { transition: none; } }
+
+/* Mode ambiance */
+.amb-tools { display: flex; gap: 10px; }
+.amb-btn.on { background: rgb(255 255 255 / .28); }
+.ambient.lyr .amb-title, .ambient.lyr .amb-artist, .ambient.lyr .amb-album { display: none; }
+.amb-lyrics { display: grid; gap: 14px; }
+.amb-lyrics[hidden] { display: none; }
+.amb-lyr-head { font-size: 18px; font-weight: 600; opacity: .66; }
+.amb-lyr-lines { display: grid; gap: 12px; }
+.amb-lyrics .lyr-line {
+  padding: 0; border-radius: 0; background: none; color: #fff; opacity: .55;
+  font-size: clamp(20px, 2.1vw, 30px); line-height: 1.25; font-weight: 700;
+  transition: opacity .45s ease, font-size .3s ease;
+}
+.amb-lyrics .lyr-line.past { opacity: .38; }
+.amb-lyrics .lyr-line.current { opacity: 1; font-size: clamp(30px, 3.2vw, 46px); font-weight: 800; background: none; }
+.amb-lyrics .lyr-line[hidden] { display: none; }
+#lyrics-btn.on { color: var(--accent); }
+/* Largeur fixe en mode paroles : la pochette ne bouge plus quand la longueur des lignes change. */
+.ambient.lyr .amb-info { width: 40vw; }
+.ambient.lyr .amb-lyrics .lyr-line { overflow-wrap: anywhere; }
+@media (max-aspect-ratio: 6/5) { .ambient.lyr .amb-info { width: 80vw; } }
+
+/* Paroles dans la colonne de droite : texte compact */
+.lyrics-open .music { grid-template-columns: 260px 1fr 360px; }
+.right-pane .lyr-body { padding: 18vh 8px 40vh; -webkit-mask-image: linear-gradient(transparent, #000 8%, #000 84%, transparent); mask-image: linear-gradient(transparent, #000 8%, #000 84%, transparent); }
+.right-pane .lyr-body.empty-body { -webkit-mask-image: none; mask-image: none; padding-top: 0; }
+.right-pane .lyr-line { font-size: 15px; line-height: 1.45; padding: 5px 10px; border-radius: 8px; }
+.right-pane .lyr-line.current { font-size: 17px; }
+.right-pane .lyr-line.plain { font-size: 14px; padding: 1px 10px; }
+
+/* Animation d'entrée et de sortie du bloc paroles */
+.music { transition: grid-template-columns .32s var(--ease); }
+.right-pane.pane-out { animation: paneOut .14s ease-in forwards; }
+.right-pane.pane-in { animation: paneIn .34s var(--ease); }
+.right-pane.pane-in.to-lyrics .lyr-line { animation: lyrLineIn .45s var(--ease) both; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(1) { animation-delay: .04s; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(2) { animation-delay: .07s; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(3) { animation-delay: .10s; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(4) { animation-delay: .13s; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(5) { animation-delay: .16s; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(6) { animation-delay: .19s; }
+.right-pane.pane-in.to-lyrics .lyr-line:nth-child(n+7) { animation-delay: .22s; }
+@keyframes paneOut { to { opacity: 0; transform: translateX(14px); filter: blur(2px); } }
+@keyframes paneIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes lyrLineIn { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .music { transition: none; } }
+
+/* Haut-parleur cliquable : couper / rétablir le son */
+.vol-btn { width: 30px; height: 30px; margin-left: 2px; }
+.vol-btn .vol-ic { margin-left: 0; }
+.vol-btn:hover .vol-ic { color: var(--text); }
+body.muted .vol-ic { color: var(--accent); }
+.amb-mute { display: grid; place-items: center; width: 28px; height: 28px; margin-left: -6px; border-radius: 50%; color: #fff; }
+.amb-mute:hover { background: rgb(255 255 255 / .15); }
+
+/* Infobulle du signal : opaque (le flou d'arrière-plan ne marche pas à l'intérieur du lecteur) */
+.signal .tip {
+  background: var(--surface-solid); backdrop-filter: none; -webkit-backdrop-filter: none;
+  border: 1px solid var(--line); box-shadow: 0 18px 44px rgb(0 0 0 / .28);
+  width: 340px; padding: 14px 16px; gap: 10px; line-height: 1.4;
+}
+.signal .tip > div:first-child { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.signal .tip .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.signal .tip ul { padding-top: 8px; border-top: 1px solid var(--line); color: var(--text-2); display: grid; gap: 4px; }
+
+/* Barre de progression du mode ambiance, déplaçable */
+.amb-bar { position: relative; cursor: pointer; overflow: visible; transition: height .15s; }
+.amb-bar::before { content: ""; position: absolute; inset: -10px 0; }
+.amb-bar:hover, .amb-bar.drag { height: 6px; }
+.amb-bar i { border-radius: 3px; }
+.amb-bar.drag i { transition: none; }

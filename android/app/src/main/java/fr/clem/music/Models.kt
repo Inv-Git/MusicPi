@@ -233,3 +233,20 @@ fun fmtPrecise(sec: Double): String {
     val r = sec - m * 60
     return "%d:%04.1f".format(m, r)
 }
+
+
+// --- Paroles (servies par le PC : fichier .lrc, tags ou LRCLIB) -------------------------------
+
+@kotlinx.serialization.Serializable
+data class LyricLine(val t: Double? = null, val text: String = "")
+
+@kotlinx.serialization.Serializable
+data class Lyrics(
+    val synced: Boolean = false,
+    val lines: List<LyricLine> = emptyList(),
+    val source: String = "",
+    val instrumental: Boolean = false,
+)
+
+@kotlinx.serialization.Serializable
+data class LyricsOut(val lyrics: Lyrics? = null, val offset: Int = 0)

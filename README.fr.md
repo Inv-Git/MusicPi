@@ -25,6 +25,7 @@ MusicPi est l'héritier de [MusicBee](https://getmusicbee.com/), le lecteur de m
 - Mode travail : ralentir sans changer la hauteur, boucle A/B
 - Aléatoire qui évite d'enchaîner le même artiste, répétition, mode radio en fin de file
 - Reprise là où tu t'étais arrêté
+- Paroles synchronisées : fichiers `.lrc`, tags, ou [LRCLIB](https://lrclib.net) en ligne, avec saut au clic et décalage par morceau
 
 **Bibliothèque**
 - Plusieurs dossiers de musique, détection automatique des albums ajoutés, déplacés ou supprimés
@@ -41,7 +42,7 @@ MusicPi est l'héritier de [MusicBee](https://getmusicbee.com/), le lecteur de m
 **App Android**
 - Parcourir et écouter ta bibliothèque depuis le téléphone, chez toi ou dehors (via Tailscale)
 - Télécommande du PC, avec les boutons de volume du téléphone
-- Albums et playlists téléchargés pour l'écoute hors ligne (fichiers FLAC d'origine)
+- Albums et playlists téléchargés pour l'écoute hors ligne (fichiers FLAC d'origine), avec leurs paroles
 - Flux Opus allégé en données mobiles
 - Cœurs et playlists synchronisés avec le PC, appairage une seule fois avec un code à 6 chiffres
 
@@ -98,7 +99,7 @@ Ouvre le dossier `android` dans [Android Studio](https://developer.android.com/s
 - [Manrope](https://github.com/sharanda/manrope) : police (SIL Open Font License)
 - Crates Rust : lofty, ureq, image, souvlaki, serde
 - Android : Jetpack Compose, Media3 / ExoPlayer, OkHttp, Coil, kotlinx.serialization
-- Données en ligne : [MusicBrainz](https://musicbrainz.org/), [Cover Art Archive](https://coverartarchive.org/), [Discogs](https://www.discogs.com/), Deezer, iTunes, [Last.fm](https://www.last.fm/)
+- Données en ligne : [LRCLIB](https://lrclib.net) (paroles), [MusicBrainz](https://musicbrainz.org/), [Cover Art Archive](https://coverartarchive.org/), [Discogs](https://www.discogs.com/), Deezer, iTunes, [Last.fm](https://www.last.fm/)
 
 ## Licence
 
