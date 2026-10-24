@@ -1238,3 +1238,32 @@ body.muted .vol-ic { color: var(--accent); }
 .amb-bar:hover, .amb-bar.drag { height: 6px; }
 .amb-bar i { border-radius: 3px; }
 .amb-bar.drag i { transition: none; }
+
+/* Fenêtre étroite : la colonne de droite (file de lecture) se retire pour laisser la place
+   aux albums. Si on affiche les paroles, c'est la liste des artistes qui se retire à la place. */
+@media (max-width: 1000px) {
+  /* la colonne vide garde son espacement de 10 px : on le reprend avec une marge négative */
+  .music { grid-template-columns: 240px 1fr 0px; margin-right: -10px; }
+  .music > .right-pane { visibility: hidden; opacity: 0; overflow: hidden; transition: opacity .2s, visibility 0s .2s; }
+  .lyrics-open .music { grid-template-columns: 0px 1fr 320px; margin-right: 0; margin-left: -10px; }
+  .lyrics-open .music > .right-pane { visibility: visible; opacity: 1; transition: opacity .25s .1s; }
+  .lyrics-open .music > .pane.flat { visibility: hidden; overflow: hidden; }
+}
+
+/* Titres d'un album : une seule colonne quand la place manque (mesurée sur la zone centrale, pas sur la fenêtre) */
+.discography { container-type: inline-size; }
+/* Sans la colonne de droite (fenêtre étroite), toujours une seule colonne de titres */
+@media (max-width: 1000px) {
+  .tl { grid-auto-flow: row; grid-template-rows: none !important; }
+  .tl .row.alt { background-color: transparent; }
+  .tl .row:nth-child(even) { background-color: rgb(var(--ink) / .035); }
+  .tl .row:hover { background: var(--hover); }
+  .tl .row.sel { background: var(--select); }
+}
+@container (max-width: 700px) {
+  .tl { grid-auto-flow: row; grid-template-rows: none !important; }
+  .tl .row.alt { background-color: transparent; }
+  .tl .row:nth-child(even) { background-color: rgb(var(--ink) / .035); }
+  .tl .row:hover { background: var(--hover); }
+  .tl .row.sel { background: var(--select); }
+}
